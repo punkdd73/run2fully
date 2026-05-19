@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import altair as alt
 
 # 頁面基本設定
 st.set_page_config(
@@ -16,23 +17,15 @@ st.markdown("本系統採用長期平均回報率，精確模擬投資在本金�
 # UI 介面設計：1. 基礎資金與時間 (主畫面)
 # ==========================================
 st.markdown("---")
-st.subheader("⚙️ 1. 基礎資金與時間")
-
-col_init, col_monthly, col_rate = st.columns(3)
-with col_init:
-    init_investment = st.number_input("單筆投入金額 (元)", min_value=0, value=100000, step=10000)
-with col_monthly:
-    monthly_investment = st.number_input("每月定期定額 (元)", min_value=0, value=10000, step=1000)
-with col_rate:
-    contrib_growth_rate = st.number_input("定期定額每年成長率 (%)", min_value=0.0, max_value=20.0, value=3.0, step=0.5)
+st.subheader("⚙️ 1. 總投資年限")
 
 col_y, col_m = st.columns(2)
 with col_y:
-    years = st.number_input("總投入時間 (年)", min_value=0, max_value=100, value=20, step=1)
+    years = st.number_input("總投入時間 (年)", value=20, step=1)
 with col_m:
-    months_offset = st.number_input("總投入時間 (月)", min_value=0, max_value=11, value=0, step=1)
+    months_offset = st.number_input("總投入時間 (月)", value=0, step=1)
 
-total_months = (years * 12) + months_offset
+total_months = int((years * 12) + months_offset)
 st.info(f"總計計算月份：**{total_months}** 個月")
 
 is_advanced = False
@@ -41,17 +34,16 @@ income_tax_rate = 0.0
 is_nhi = False
 is_tax_fees = False
 
-# 時間防呆
 if total_months == 0:
-    st.info("💡 **請在上方『基礎資金與時間』區塊設定大於 0 的投入時間！**\n\n設定完畢後，複利模擬大腦將即時啟動，為您演算終局財富曲線，奔向複利。")
+    st.info("💡 **請在上方設定大於 0 的投入時間！**\n\n設定完畢後，複利模擬大腦將即時啟動，為您演算終局財富曲線，奔向複利。")
     st.stop()
 
 # ==========================================
 # UI 介面設計：主畫面 配置模式選擇
 # ==========================================
 st.markdown("---")
-st.subheader("📊 2. 投資標的與回報率設定")
-mode = st.radio("請選擇配置模式：", ["單選投資標的", "複選投資組合 (自訂權重)"], horizontal=True)
+st.subheader("📊 2. 投資標的與投入設定")
+mode = st.radio("請選擇配置模式：", ["單選投資標的", "複選投資組合"], horizontal=True)
 
 config_data = []
 
@@ -68,7 +60,6 @@ vol_map = {
 if mode == "單選投資標的":
     asset_type = st.selectbox("選擇資產類型", ["市值型股票 (如 0050/VTI)", "配息型股票 (如 00878/高股息)", "債券型資產"])
     
-    # 根據選取類型給予不同的預設長期平均值
     if asset_type == "市值型股票 (如 0050/VTI)":
         def_g, def_y = 8.0, 3.0
     elif asset_type == "配息型股票 (如 00878/高股息)":
@@ -78,117 +69,123 @@ if mode == "單選投資標的":
         
     col1, col2, col3 = st.columns(3)
     with col1:
-        g_rate = st.number_input("長期平均純市值年化增長率 (%)", value=def_g, step=0.1)
+        init_inv = st.number_input("單筆投入金額 (元)", value=0, step=10000)
+        monthly_inv = st.number_input("每月定期定額 (元)", value=0, step=1000)
+        monthly_g = st.number_input("定期定額每年成長率 (%)", value=0.0, step=0.5)
     with col2:
-        y_rate = st.number_input("長期平均年化配息率 (%)", value=def_y, step=0.1)
+        g_rate = st.number_input("純市值年化增長率 (%)", value=def_g, step=0.1)
+        y_rate = st.number_input("年化配息率 (%)", value=def_y, step=0.1)
     with col3:
         st.markdown("<div style='padding-top: 35px;'></div>", unsafe_allow_html=True)
         is_reinvest = st.checkbox("配息是否再投入", value=True)
         
     config_data.append({
-        "type": asset_type, "weight": 100.0, "growth": g_rate / 100, "yield": y_rate / 100, "reinvest": is_reinvest
+        "type": asset_type, "init_inv": max(0.0, float(init_inv)), "monthly_inv": max(0.0, float(monthly_inv)), 
+        "monthly_growth_rate": float(monthly_g), "growth": float(g_rate) / 100, "yield": float(y_rate) / 100, "reinvest": is_reinvest
     })
-    st.success("單選標的配置成功 (權重自動為 100%)")
 
 else:
-    st.markdown("請設定各資產的長期回報率與權重（總和必須等於 100%）：")
+    st.markdown("請分別設定各資產的投入金額與回報率（各資產獨立計算）：")
     
-    col_m, col_d, col_b = st.columns(3)
+    assets_config = [
+        {"name": "📈 市值型股票 (如 0050)", "type": "市值型", "def_g": 8.0, "def_y": 3.0, "def_r": True},
+        {"name": "💰 配息型股票 (如 00878)", "type": "配息型", "def_g": 2.0, "def_y": 6.5, "def_r": False},
+        {"name": "🛡️ 債券型資產", "type": "債券型", "def_g": 0.5, "def_y": 4.0, "def_r": True}
+    ]
     
-    with col_m:
-        st.markdown("### 📈 市值型股票 (如 0050)")
-        w_m = st.number_input("權重 (%)", min_value=0, max_value=100, value=40, step=5, key="w_m_input")
-        g_m = st.number_input("純市值年化增長率 (%)", value=8.0, step=0.1, key="g_m_input")
-        y_m = st.number_input("年化配息率 (%)", value=3.0, step=0.1, key="y_m_input")
-        r_m = st.checkbox("配息再投入", value=True, key="r_m_input")
-        
-    with col_d:
-        st.markdown("### 💰 配息型股票 (如 00878)")
-        w_d = st.number_input("權重 (%)", min_value=0, max_value=100, value=40, step=5, key="w_d_input")
-        g_d = st.number_input("純市值年化增長率 (%)", value=2.0, step=0.1, key="g_d_input")
-        y_d = st.number_input("年化配息率 (%)", value=6.5, step=0.1, key="y_d_input")
-        r_d = st.checkbox("配息再投入", value=False, key="r_d_input")
-        
-    with col_b:
-        st.markdown("### 🛡️ 債券型資產")
-        w_b = st.number_input("權重 (%)", min_value=0, max_value=100, value=20, step=5, key="w_b_input")
-        g_b = st.number_input("純市值年化增長率 (%)", value=0.5, step=0.1, key="g_b_input")
-        y_b = st.number_input("年化配息率 (%)", value=4.0, step=0.1, key="y_b_input")
-        r_b = st.checkbox("配息再投入", value=True, key="r_b_input")
-
-    total_weight = w_m + w_d + w_b
-    if total_weight != 100:
-        st.error(f"❌ 目前權重總和為 {total_weight}%。總額必須剛好等於 100% 才能啟動計算。")
-        st.stop()
-    else:
-        st.success("✅ 權重檢查通過 (剛好 100%)")
-        
-    # 封裝複選數據
-    config_data.append({"type": "市值型", "weight": w_m, "growth": g_m/100, "yield": y_m/100, "reinvest": r_m})
-    config_data.append({"type": "配息型", "weight": w_d, "growth": g_d/100, "yield": y_d/100, "reinvest": r_d})
-    config_data.append({"type": "債券型", "weight": w_b, "growth": g_b/100, "yield": y_b/100, "reinvest": r_b})
-
-# ==========================================
-# 核心大腦：計算「加權複利因子」
-# ==========================================
-final_growth_factor = sum(row["growth"] * (row["weight"] / 100) for row in config_data)
-final_reinvest_yield_factor = sum(row["yield"] * (row["weight"] / 100) for row in config_data if row["reinvest"])
-final_cashout_yield_factor = sum(row["yield"] * (row["weight"] / 100) for row in config_data if not row["reinvest"])
-final_yield_factor = final_reinvest_yield_factor + final_cashout_yield_factor
+    for i, ast in enumerate(assets_config):
+        st.markdown(f"#### {ast['name']}")
+        c1, c2, c3, c4 = st.columns(4)
+        with c1:
+            i_inv = st.number_input("單筆投入(元)", value=0, step=10000, key=f"i_inv_{i}")
+            m_inv = st.number_input("每月定額(元)", value=0, step=1000, key=f"m_inv_{i}")
+        with c2:
+            m_g = st.number_input("定額年成長(%)", value=0.0, step=0.5, key=f"m_g_{i}")
+            g_rate = st.number_input("市值年增率(%)", value=ast['def_g'], step=0.1, key=f"g_{i}")
+        with c3:
+            y_rate = st.number_input("年化配息率(%)", value=ast['def_y'], step=0.1, key=f"y_{i}")
+            st.markdown("<div style='padding-top: 35px;'></div>", unsafe_allow_html=True)
+            r_inv = st.checkbox("配息再投入", value=ast['def_r'], key=f"r_{i}")
+        with c4:
+            st.empty()
+            
+        config_data.append({
+            "type": ast['type'], 
+            "init_inv": max(0.0, float(i_inv)), 
+            "monthly_inv": max(0.0, float(m_inv)), 
+            "monthly_growth_rate": float(m_g), 
+            "growth": float(g_rate) / 100, 
+            "yield": float(y_rate) / 100, 
+            "reinvest": r_inv
+        })
 
 # ==========================================
 # 核心大腦：執行 1 ~ N 個月 確定性滾動運算
 # ==========================================
+total_init_investment = sum(cfg["init_inv"] for cfg in config_data)
+total_capital_added = total_init_investment
+
+assets_state = []
+for cfg in config_data:
+    assets_state.append({
+        "current_market_value": cfg["init_inv"],
+        "total_cash_withdrawn": 0.0,
+        "cfg": cfg
+    })
+
 data_rows = []
-current_market_value = float(init_investment)
-total_cash_withdrawn = 0.0
+global_total_cash_withdrawn = 0.0
+global_current_market_value = total_init_investment
 
 for m in range(1, total_months + 1):
     years_passed = (m - 1) // 12
-    m_contribution = monthly_investment * ((1 + contrib_growth_rate / 100) ** years_passed)
     
-    # 手續費與稅費均為 0
-    buy_fee = 0.0
-    net_contribution = m_contribution
+    m_total_contrib = 0.0
+    m_total_growth = 0.0
+    m_total_reinvest = 0.0
+    m_total_cashout = 0.0
+    m_total_end_value = 0.0
     
-    base_value = current_market_value + net_contribution
-    m_growth = base_value * (final_growth_factor / 12)
+    for ast in assets_state:
+        cfg = ast["cfg"]
+        m_contrib = cfg["monthly_inv"] * ((1 + cfg["monthly_growth_rate"]/100) ** years_passed)
+        base_value = ast["current_market_value"] + m_contrib
+        
+        m_growth = base_value * (cfg["growth"] / 12)
+        if cfg["reinvest"]:
+            m_reinvest = base_value * (cfg["yield"] / 12)
+            m_cashout = 0.0
+        else:
+            m_reinvest = 0.0
+            m_cashout = base_value * (cfg["yield"] / 12)
+            
+        end_value = base_value + m_growth + m_reinvest
+        
+        ast["current_market_value"] = end_value
+        ast["total_cash_withdrawn"] += m_cashout
+        
+        m_total_contrib += m_contrib
+        m_total_growth += m_growth
+        m_total_reinvest += m_reinvest
+        m_total_cashout += m_cashout
+        m_total_end_value += end_value
+        
+    total_capital_added += m_total_contrib
+    global_total_cash_withdrawn += m_total_cashout
+    global_current_market_value = m_total_end_value
     
-    m_div_reinvest_net = base_value * (final_reinvest_yield_factor / 12)
-    m_div_cashout_net = base_value * (final_cashout_yield_factor / 12)
-    
-    tax_deduction = 0.0
-    nhi_deduction = 0.0
-    reinvest_fee = 0.0
-    
-    end_market_value = base_value + m_growth + m_div_reinvest_net
-    total_cash_withdrawn += m_div_cashout_net
-    
-    if is_advanced:
-        data_rows.append({
-            "月份": m,
-            "起始市值": round(current_market_value),
-            "本月投入": round(m_contribution),
-            "市值增長": round(m_growth),
-            "配息再投入": round(m_div_reinvest_net),
-            "配息提領現金": round(m_div_cashout_net),
-            "期末帳戶總市值": round(end_market_value),
-            "當月總配息": round(m_div_reinvest_net + m_div_cashout_net),
-            "累積提領現金": round(total_cash_withdrawn)
-        })
-    else:
-        data_rows.append({
-            "月份": m,
-            "帳戶起始金額": round(current_market_value),
-            "本月定期定額投入": round(m_contribution),
-            "當月市值上漲金額": round(m_growth),
-            "配息再投入滾利": round(m_div_reinvest_net),
-            "配息提領拿走": round(m_div_cashout_net),
-            "期末帳戶總市值": round(end_market_value),
-            "當月可領配息(折合月領)": round(m_div_reinvest_net + m_div_cashout_net)
-        })
-    
-    current_market_value = end_market_value
+    data_rows.append({
+        "月份": m,
+        "年": round(m / 12, 2),
+        "帳戶起始金額": round(m_total_end_value - m_total_growth - m_total_reinvest - m_total_contrib),
+        "本月定期定額投入": round(m_total_contrib),
+        "當月市值上漲金額": round(m_total_growth),
+        "配息再投入滾利": round(m_total_reinvest),
+        "配息提領拿走": round(m_total_cashout),
+        "期末帳戶總市值": round(m_total_end_value),
+        "當月可領配息(折合月領)": round(m_total_reinvest + m_total_cashout),
+        "累積提領現金": round(global_total_cash_withdrawn)
+    })
 
 df = pd.DataFrame(data_rows)
 
@@ -200,19 +197,18 @@ st.subheader("🏆 3. 累積期終局戰果看板")
 
 kpi1, kpi2, kpi3 = st.columns(3)
 with kpi1:
-    st.metric(label="最終股票帳戶總市值", value=f"${round(current_market_value):,}")
+    st.metric(label="最終股票帳戶總市值", value=f"${round(global_current_market_value):,}")
 
 with kpi2:
-    st.metric(label="累積純領息提領現金總和", value=f"${round(total_cash_withdrawn):,}")
+    st.metric(label="累積純領息提領現金總和", value=f"${round(global_total_cash_withdrawn):,}")
 
 # 計算投報率 (ROI)
-total_capital = float(init_investment) + df["本月投入" if is_advanced else "本月定期定額投入"].sum()
-roi = ((current_market_value + total_cash_withdrawn - total_capital) / total_capital * 100) if total_capital > 0 else 0.0
+roi = ((global_current_market_value + global_total_cash_withdrawn - total_capital_added) / total_capital_added * 100) if total_capital_added > 0 else 0.0
 
 with kpi3:
     st.metric(label="總投資報酬率 (含已拿走現金)", value=f"{roi:.2f}%")
 
-st.info(f"💡 本次計畫總計投入本金總額：**${round(total_capital):,}** 元。")
+st.info(f"💡 本次計畫總計投入本金總額：**${round(total_capital_added):,}** 元。")
 
 # ==========================================
 # UI 介面設計：蒙地卡羅隨機波動模擬器 (Monte Carlo)
@@ -221,8 +217,20 @@ st.markdown("---")
 st.subheader("🎲 4. 隨機波動風險評估 (蒙地卡羅隨機路徑模擬)")
 st.markdown("真實市場充斥波動與「順序風險（Sequence of Returns Risk）」。本模組根據資產配置的年化波動度，在背景隨機生成 **250 條** 股市波動路徑，助您評估悲觀、平均及樂觀情境。")
 
-portfolio_annual_return = sum((row["growth"] + row["yield"]) * (row["weight"] / 100) for row in config_data)
-portfolio_volatility = sum(vol_map[row["type"]] * (row["weight"] / 100) for row in config_data)
+total_inv_per_asset = [cfg["init_inv"] + cfg["monthly_inv"] * total_months for cfg in config_data]
+total_inv_sum = sum(total_inv_per_asset)
+
+if total_inv_sum > 0:
+    weights = [w / total_inv_sum for w in total_inv_per_asset]
+else:
+    weights = [1.0 / len(config_data)] * len(config_data)
+
+portfolio_annual_return = sum((cfg["growth"] + cfg["yield"]) * w for cfg, w in zip(config_data, weights))
+portfolio_volatility = sum(vol_map.get(cfg["type"], 0.1) * w for cfg, w in zip(config_data, weights))
+
+total_reinvested_return = sum((cfg["growth"] + (cfg["yield"] if cfg["reinvest"] else 0)) * w for cfg, w in zip(config_data, weights))
+total_account_return = portfolio_annual_return
+stay_ratio = (total_reinvested_return / total_account_return) if total_account_return > 0 else 1.0
 
 st.markdown(f"💼 當前配置特徵值：預估長期加權年化總回報率 **`{portfolio_annual_return*100:.1f}%`**，預估長期年化波動度 **`{portfolio_volatility*100:.1f}%`**。")
 
@@ -231,7 +239,7 @@ is_mc_real = False
 np.random.seed(42)
 num_simulations = 250
 sim_results = np.zeros((total_months + 1, num_simulations))
-sim_results[0, :] = float(init_investment)
+sim_results[0, :] = float(total_init_investment)
 
 mu_m = (portfolio_annual_return - 0.5 * (portfolio_volatility ** 2)) / 12
 sigma_m = portfolio_volatility / np.sqrt(12)
@@ -239,16 +247,12 @@ sigma_m = portfolio_volatility / np.sqrt(12)
 random_returns = np.random.normal(loc=mu_m, scale=sigma_m, size=(total_months, num_simulations))
 simple_returns = np.exp(random_returns) - 1
 
-total_rate = final_growth_factor + final_reinvest_yield_factor + final_cashout_yield_factor
-stay_ratio = (final_growth_factor + final_reinvest_yield_factor) / total_rate if total_rate > 0 else 1.0
-
 for m in range(1, total_months + 1):
     prev_vals = sim_results[m - 1, :]
     years_passed = (m - 1) // 12
-    m_contrib = monthly_investment * ((1 + contrib_growth_rate / 100) ** years_passed)
-    net_contrib = m_contrib
+    m_contrib = sum(cfg["monthly_inv"] * ((1 + cfg["monthly_growth_rate"]/100) ** years_passed) for cfg in config_data)
     
-    base_vals = prev_vals + net_contrib
+    base_vals = prev_vals + m_contrib
     r = simple_returns[m - 1, :]
     
     account_r = r * stay_ratio
@@ -256,7 +260,6 @@ for m in range(1, total_months + 1):
     end_vals = np.maximum(end_vals, 0.0)
     sim_results[m, :] = end_vals
     
-# Extract nominal percentiles (important for starting capital in retirement phase)
 p10_mc_nominal = np.percentile(sim_results, 10, axis=1)
 p50_mc_nominal = np.percentile(sim_results, 50, axis=1)
 p90_mc_nominal = np.percentile(sim_results, 90, axis=1)
@@ -265,9 +268,8 @@ p10_mc = p10_mc_nominal.copy()
 p50_mc = p50_mc_nominal.copy()
 p90_mc = p90_mc_nominal.copy()
 
-# Add Deterministic Mean to the Monte Carlo comparison
 deterministic_path = np.zeros(total_months + 1)
-deterministic_path[0] = float(init_investment)
+deterministic_path[0] = float(total_init_investment)
 deterministic_path[1:] = df["期末帳戶總市值"]
     
 mc_chart_df = pd.DataFrame({
@@ -276,9 +278,17 @@ mc_chart_df = pd.DataFrame({
     "中位數情況 (50% 分位數)": p50_mc,
     "確定性均值 (理想狀態)": deterministic_path,
     "樂觀情況 (前 10% 分位數)": p90_mc
-}).set_index("月份")
+})
+mc_chart_df["年"] = mc_chart_df["月份"] / 12
+mc_melt = mc_chart_df.melt(id_vars=["年", "月份"], value_vars=["悲觀情況 (後 10% 分位數)", "中位數情況 (50% 分位數)", "確定性均值 (理想狀態)", "樂觀情況 (前 10% 分位數)"], var_name="情境", value_name="市值")
 
-st.line_chart(mc_chart_df)
+mc_altair = alt.Chart(mc_melt).mark_line().encode(
+    x=alt.X("年:Q", title="年", axis=alt.Axis(format="d")),
+    y=alt.Y("市值:Q", title="市值", axis=alt.Axis(format=",d")),
+    color=alt.Color("情境:N", legend=alt.Legend(title=None, orient="bottom")),
+    tooltip=[alt.Tooltip("年:Q", title="年", format=".1f"), alt.Tooltip("情境:N", title="情境"), alt.Tooltip("市值:Q", title="市值", format=",.0f")]
+).properties(height=400)
+st.altair_chart(mc_altair, use_container_width=True)
 
 col_mc1, col_mc2, col_mc3, col_mc4 = st.columns(4)
 col_mc1.metric("悲觀情況下股票市值 (P10)", f"${round(p10_mc[-1]):,}")
@@ -324,7 +334,7 @@ with selectors_col2:
 
 # 邏輯計算
 if retirement_starting_fund_source == "確定性均值 (理想狀態)":
-    retirement_starting_fund_nominal = current_market_value
+    retirement_starting_fund_nominal = global_current_market_value
     retirement_starting_fund_display = deterministic_path[-1]
 elif retirement_starting_fund_source == "蒙地卡羅 - 悲觀情況 (P10)":
     retirement_starting_fund_nominal = p10_mc_nominal[-1]
@@ -382,12 +392,18 @@ if retirement_starting_fund <= 0:
     st.warning("⚠️ **提領期起始本金為 0 元，無法進行退休提領模擬。**")
 else:
     # --- Background Simulation (non-visual) ---
-    max_months = 1200
+    max_months = 480  # 40年
     w_fund_nominal = retirement_starting_fund
     w_fund_real = retirement_starting_fund
     w_rows = []
     exhaust_month = -1
     total_withdrawn_nominal = 0.0
+    
+    final_balances = [ast["current_market_value"] for ast in assets_state]
+    final_balances_sum = sum(final_balances)
+    ret_weights = [b / final_balances_sum for b in final_balances] if final_balances_sum > 0 else weights
+    blended_growth = sum(cfg["growth"] * w for cfg, w in zip(config_data, ret_weights))
+    blended_yield = sum(cfg["yield"] * w for cfg, w in zip(config_data, ret_weights))
 
     for wm in range(1, max_months + 1):
         w_year = (wm - 1) // 12
@@ -403,8 +419,8 @@ else:
         current_monthly_withdrawal_actual = min(w_fund_nominal, current_monthly_withdrawal)
         total_withdrawn_nominal += current_monthly_withdrawal_actual
         
-        m_growth = w_fund_nominal * (final_growth_factor / 12)
-        m_dividend = w_fund_nominal * (final_yield_factor / 12)
+        m_growth = w_fund_nominal * (blended_growth / 12)
+        m_dividend = w_fund_nominal * (blended_yield / 12)
         
         excess_dividend = m_dividend - current_monthly_withdrawal_actual
         net_change = m_growth + excess_dividend
@@ -488,20 +504,19 @@ else:
         )
         
     st.markdown("📊 **提領期資產餘額與累積提取生活費動態圖**")
+    w_chart_data = w_df.copy()
     if is_inflation:
-        w_chart_data = pd.DataFrame({
-            "年": w_df["年"],
-            "股票帳戶名目餘額": w_df["帳戶餘額_名目"],
-            "股票帳戶實質餘額(折合今日購買力)": w_df["帳戶餘額_實質"],
-            "累積已提取名目生活費": w_df["累積提領金額(名目)"]
-        }).set_index("年")
+        w_melt = w_chart_data.melt(id_vars=["年"], value_vars=["帳戶餘額_名目", "帳戶餘額_實質", "累積提領金額(名目)"], var_name="項目", value_name="金額")
     else:
-        w_chart_data = pd.DataFrame({
-            "年": w_df["年"],
-            "股票帳戶總餘額": w_df["帳戶餘額_名目"],
-            "累積已提取生活費": w_df["累積提領金額(名目)"]
-        }).set_index("年")
-    st.line_chart(w_chart_data)
+        w_melt = w_chart_data.melt(id_vars=["年"], value_vars=["帳戶餘額_名目", "累積提領金額(名目)"], var_name="項目", value_name="金額")
+
+    w_altair = alt.Chart(w_melt).mark_line().encode(
+        x=alt.X("年:Q", title="年", axis=alt.Axis(format="d")),
+        y=alt.Y("金額:Q", title="金額", axis=alt.Axis(format=",d")),
+        color=alt.Color("項目:N", legend=alt.Legend(title=None, orient="bottom")),
+        tooltip=[alt.Tooltip("年:Q", title="年", format=".1f"), alt.Tooltip("項目:N", title="項目"), alt.Tooltip("金額:Q", title="金額", format=",.0f")]
+    ).properties(height=400)
+    st.altair_chart(w_altair, use_container_width=True)
 
 # ==========================================
 # UI 介面設計：詳細月份數據表與下載
@@ -513,15 +528,19 @@ st.dataframe(df, use_container_width=True, hide_index=True)
 # 財富成長幾何曲線
 st.markdown("---")
 st.subheader("📈 累積期財富幾何成長曲線")
-if is_advanced:
-    chart_data = pd.DataFrame({
-        "月份": df["月份"],
-        "股票帳戶總市值": df["期末帳戶總市值"],
-        "累積提領現金": df["累積提領現金"]
-    }).set_index("月份")
+area_chart_df = df.copy()
+if "累積提領現金" in df.columns:
+    area_melt = area_chart_df.melt(id_vars=["年"], value_vars=["期末帳戶總市值", "累積提領現金"], var_name="項目", value_name="金額")
 else:
-    chart_data = pd.DataFrame({
-        "月份": df["月份"],
-        "股票帳戶總市值": df["期末帳戶總市值"]
-    }).set_index("月份")
-st.area_chart(chart_data)
+    area_melt = area_chart_df.melt(id_vars=["年"], value_vars=["期末帳戶總市值"], var_name="項目", value_name="金額")
+
+area_altair = alt.Chart(area_melt).mark_area(opacity=0.5).encode(
+    x=alt.X("年:Q", title="年", axis=alt.Axis(format="d")),
+    y=alt.Y("金額:Q", title="金額", axis=alt.Axis(format=",d")),
+    color=alt.Color("項目:N", legend=alt.Legend(title=None, orient="bottom")),
+    tooltip=[alt.Tooltip("年:Q", title="年", format=".1f"), alt.Tooltip("項目:N", title="項目"), alt.Tooltip("金額:Q", title="金額", format=",.0f")]
+).properties(height=400)
+st.altair_chart(area_altair, use_container_width=True)
+
+st.markdown("---")
+st.caption("© 2026 Run2Fully. All rights reserved.")
