@@ -6,6 +6,7 @@ import altair as alt
 # 頁面基本設定
 st.set_page_config(
     page_title="Run2Fully多資產複利計算機",
+    page_icon="https://www.run2fully.com/assets/favicon.png",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
