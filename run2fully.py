@@ -305,7 +305,7 @@ mc_melt = mc_chart_df.melt(id_vars=["年", "月份"], value_vars=["悲觀 (P10)"
 mc_altair = alt.Chart(mc_melt).mark_line().encode(
     x=alt.X("年:Q", title="年", axis=alt.Axis(format="d")),
     y=alt.Y("市值:Q", title="市值", axis=alt.Axis(format=",d")),
-    color=alt.Color("情境:N", legend=alt.Legend(title=None, orient="bottom")),
+    color=alt.Color("情境:N", sort=["悲觀 (P10)", "平均 (P50)", "理想 (均值)", "樂觀 (P90)"], legend=alt.Legend(title=None, orient="bottom")),
     tooltip=[alt.Tooltip("年:Q", title="年", format=".1f"), alt.Tooltip("情境:N", title="情境"), alt.Tooltip("市值:Q", title="市值", format=",.0f")]
 ).properties(height=400)
 st.altair_chart(mc_altair, use_container_width=True)
@@ -543,7 +543,7 @@ else:
     w_altair = alt.Chart(w_melt).mark_line().encode(
         x=alt.X("年:Q", title="年", axis=alt.Axis(format="d")),
         y=alt.Y("金額:Q", title="金額", axis=alt.Axis(format=",d")),
-        color=alt.Color("項目:N", legend=alt.Legend(title=None, orient="bottom")),
+        color=alt.Color("項目:N", sort=["餘額 (名目)", "餘額 (實質)", "累積提領"], legend=alt.Legend(title=None, orient="bottom")),
         tooltip=[alt.Tooltip("年:Q", title="年", format=".1f"), alt.Tooltip("項目:N", title="項目"), alt.Tooltip("金額:Q", title="金額", format=",.0f")]
     ).properties(height=400)
     st.altair_chart(w_altair, use_container_width=True)
@@ -571,7 +571,7 @@ else:
 area_altair = alt.Chart(area_melt).mark_area(opacity=0.5).encode(
     x=alt.X("年:Q", title="年", axis=alt.Axis(format="d")),
     y=alt.Y("金額:Q", title="金額", axis=alt.Axis(format=",d")),
-    color=alt.Color("項目:N", legend=alt.Legend(title=None, orient="bottom")),
+    color=alt.Color("項目:N", sort=["總市值", "累積提領"], legend=alt.Legend(title=None, orient="bottom")),
     tooltip=[alt.Tooltip("年:Q", title="年", format=".1f"), alt.Tooltip("項目:N", title="項目"), alt.Tooltip("金額:Q", title="金額", format=",.0f")]
 ).properties(height=400)
 st.altair_chart(area_altair, use_container_width=True)
