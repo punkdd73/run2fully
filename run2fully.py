@@ -6,28 +6,34 @@ import numpy as np
 st.set_page_config(
     page_title="Run2Fully多資產複利計算機",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 st.title("Run2Fully多資產複利計算機")
 st.markdown("本系統採用長期平均回報率，精確模擬投資在本金與配息再投入下的增長軌跡。")
 
 # ==========================================
-# UI 介面設計：側邊欄 (Sidebar) 參數設定
+# UI 介面設計：1. 基礎資金與時間 (主畫面)
 # ==========================================
-st.sidebar.header("⚙️ 1. 基礎資金與時間")
-init_investment = st.sidebar.number_input("單筆投入金額 (元)", min_value=0, value=100000, step=10000)
-monthly_investment = st.sidebar.number_input("每月定期定額 (元)", min_value=0, value=10000, step=1000)
-contrib_growth_rate = st.sidebar.number_input("定期定額每年成長率 (%)", min_value=0.0, max_value=20.0, value=3.0, step=0.5)
+st.markdown("---")
+st.subheader("⚙️ 1. 基礎資金與時間")
 
-col_y, col_m = st.sidebar.columns(2)
+col_init, col_monthly, col_rate = st.columns(3)
+with col_init:
+    init_investment = st.number_input("單筆投入金額 (元)", min_value=0, value=100000, step=10000)
+with col_monthly:
+    monthly_investment = st.number_input("每月定期定額 (元)", min_value=0, value=10000, step=1000)
+with col_rate:
+    contrib_growth_rate = st.number_input("定期定額每年成長率 (%)", min_value=0.0, max_value=20.0, value=3.0, step=0.5)
+
+col_y, col_m = st.columns(2)
 with col_y:
-    years = st.sidebar.number_input("總投入時間 (年)", min_value=0, max_value=100, value=20, step=1)
+    years = st.number_input("總投入時間 (年)", min_value=0, max_value=100, value=20, step=1)
 with col_m:
-    months_offset = st.sidebar.number_input("總投入時間 (月)", min_value=0, max_value=11, value=0, step=1)
+    months_offset = st.number_input("總投入時間 (月)", min_value=0, max_value=11, value=0, step=1)
 
 total_months = (years * 12) + months_offset
-st.sidebar.info(f"總計計算月份：**{total_months}** 個月")
+st.info(f"總計計算月份：**{total_months}** 個月")
 
 is_advanced = False
 fee_rate = 0.0
@@ -37,7 +43,7 @@ is_tax_fees = False
 
 # 時間防呆
 if total_months == 0:
-    st.info("💡 **請在左側邊欄設定大於 0 的投入時間！**\n\n設定完畢後，複利模擬大腦將即時啟動，為您演算終局財富曲線，奔向複利。")
+    st.info("💡 **請在上方『基礎資金與時間』區塊設定大於 0 的投入時間！**\n\n設定完畢後，複利模擬大腦將即時啟動，為您演算終局財富曲線，奔向複利。")
     st.stop()
 
 # ==========================================
@@ -87,37 +93,28 @@ if mode == "單選投資標的":
 else:
     st.markdown("請設定各資產的長期回報率與權重（總和必須等於 100%）：")
     
-    # 建立表頭
-    h_type, h_w, h_g, h_y, h_r = st.columns([2, 1.2, 2.5, 2.5, 1])
-    h_type.markdown("**資產類型**")
-    h_w.markdown("**權重 %**")
-    h_g.markdown("**純市值年化增長率 (%)**")
-    h_y.markdown("**年化配息率 (%)**")
-    h_r.markdown("**再投入**")
+    col_m, col_d, col_b = st.columns(3)
     
-    # 建立第一列：市值型
-    r1_type, r1_w, r1_g, r1_y, r1_r = st.columns([2, 1.2, 2.5, 2.5, 1])
-    r1_type.markdown("📈 市值型股票 (如 0050)")
-    w_m = r1_w.number_input("權重1", min_value=0, max_value=100, value=40, step=5, label_visibility="collapsed")
-    g_m = r1_g.number_input("增長1", value=8.0, step=0.1, label_visibility="collapsed")
-    y_m = r1_y.number_input("配息1", value=3.0, step=0.1, label_visibility="collapsed")
-    r_m = r1_r.checkbox("再投入1", value=True, label_visibility="collapsed")
-    
-    # 建立第二列：配息型
-    r2_type, r2_w, r2_g, r2_y, r2_r = st.columns([2, 1.2, 2.5, 2.5, 1])
-    r2_type.markdown("💰 配息型股票 (如 00878)")
-    w_d = r2_w.number_input("權重2", min_value=0, max_value=100, value=40, step=5, label_visibility="collapsed")
-    g_d = r2_g.number_input("增長2", value=2.0, step=0.1, label_visibility="collapsed")
-    y_d = r2_y.number_input("配息2", value=6.5, step=0.1, label_visibility="collapsed")
-    r_d = r2_r.checkbox("再投入2", value=False, label_visibility="collapsed")
-    
-    # 建立第三列：債券型
-    r3_type, r3_w, r3_g, r3_y, r3_r = st.columns([2, 1.2, 2.5, 2.5, 1])
-    r3_type.markdown("🛡️ 債券型資產")
-    w_b = r3_w.number_input("權重3", min_value=0, max_value=100, value=20, step=5, label_visibility="collapsed")
-    g_b = r3_g.number_input("增長3", value=0.5, step=0.1, label_visibility="collapsed")
-    y_b = r3_y.number_input("配息3", value=4.0, step=0.1, label_visibility="collapsed")
-    r_b = r3_r.checkbox("再投入3", value=True, label_visibility="collapsed")
+    with col_m:
+        st.markdown("### 📈 市值型股票 (如 0050)")
+        w_m = st.number_input("權重 (%)", min_value=0, max_value=100, value=40, step=5, key="w_m_input")
+        g_m = st.number_input("純市值年化增長率 (%)", value=8.0, step=0.1, key="g_m_input")
+        y_m = st.number_input("年化配息率 (%)", value=3.0, step=0.1, key="y_m_input")
+        r_m = st.checkbox("配息再投入", value=True, key="r_m_input")
+        
+    with col_d:
+        st.markdown("### 💰 配息型股票 (如 00878)")
+        w_d = st.number_input("權重 (%)", min_value=0, max_value=100, value=40, step=5, key="w_d_input")
+        g_d = st.number_input("純市值年化增長率 (%)", value=2.0, step=0.1, key="g_d_input")
+        y_d = st.number_input("年化配息率 (%)", value=6.5, step=0.1, key="y_d_input")
+        r_d = st.checkbox("配息再投入", value=False, key="r_d_input")
+        
+    with col_b:
+        st.markdown("### 🛡️ 債券型資產")
+        w_b = st.number_input("權重 (%)", min_value=0, max_value=100, value=20, step=5, key="w_b_input")
+        g_b = st.number_input("純市值年化增長率 (%)", value=0.5, step=0.1, key="g_b_input")
+        y_b = st.number_input("年化配息率 (%)", value=4.0, step=0.1, key="y_b_input")
+        r_b = st.checkbox("配息再投入", value=True, key="r_b_input")
 
     total_weight = w_m + w_d + w_b
     if total_weight != 100:
