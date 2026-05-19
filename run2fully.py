@@ -69,15 +69,20 @@ if mode == "單選投資標的":
         
     col1, col2, col3 = st.columns(3)
     with col1:
-        init_inv = st.number_input("單筆投入金額 (元)", value=0, step=10000)
-        monthly_inv = st.number_input("每月定期定額 (元)", value=0, step=1000)
-        monthly_g = st.number_input("定期定額每年成長率 (%)", value=0.0, step=0.5)
+        init_inv = st.number_input("單筆投入(元)", value=0, step=10000)
     with col2:
-        g_rate = st.number_input("純市值年化增長率 (%)", value=def_g, step=0.1)
-        y_rate = st.number_input("年化配息率 (%)", value=def_y, step=0.1)
+        monthly_inv = st.number_input("每月定額(元)", value=0, step=1000)
     with col3:
+        monthly_g = st.number_input("定額年成長(元)", value=0, step=100)
+        
+    col4, col5, col6 = st.columns(3)
+    with col4:
+        g_rate = st.number_input("市值年增率(%)", value=def_g, step=0.1)
+    with col5:
+        y_rate = st.number_input("年化配息率(%)", value=def_y, step=0.1)
+    with col6:
         st.markdown("<div style='padding-top: 35px;'></div>", unsafe_allow_html=True)
-        is_reinvest = st.checkbox("配息是否再投入", value=True)
+        is_reinvest = st.checkbox("配息再投入", value=True)
         
     config_data.append({
         "type": asset_type, "init_inv": max(0.0, float(init_inv)), "monthly_inv": max(0.0, float(monthly_inv)), 
@@ -95,19 +100,22 @@ else:
     
     for i, ast in enumerate(assets_config):
         st.markdown(f"#### {ast['name']}")
-        c1, c2, c3, c4 = st.columns(4)
+        c1, c2, c3 = st.columns(3)
         with c1:
             i_inv = st.number_input("單筆投入(元)", value=0, step=10000, key=f"i_inv_{i}")
-            m_inv = st.number_input("每月定額(元)", value=0, step=1000, key=f"m_inv_{i}")
         with c2:
-            m_g = st.number_input("定額年成長(%)", value=0.0, step=0.5, key=f"m_g_{i}")
-            g_rate = st.number_input("市值年增率(%)", value=ast['def_g'], step=0.1, key=f"g_{i}")
+            m_inv = st.number_input("每月定額(元)", value=0, step=1000, key=f"m_inv_{i}")
         with c3:
+            m_g = st.number_input("定額年成長(元)", value=0, step=100, key=f"m_g_{i}")
+            
+        c4, c5, c6 = st.columns(3)
+        with c4:
+            g_rate = st.number_input("市值年增率(%)", value=ast['def_g'], step=0.1, key=f"g_{i}")
+        with c5:
             y_rate = st.number_input("年化配息率(%)", value=ast['def_y'], step=0.1, key=f"y_{i}")
+        with c6:
             st.markdown("<div style='padding-top: 35px;'></div>", unsafe_allow_html=True)
             r_inv = st.checkbox("配息再投入", value=ast['def_r'], key=f"r_{i}")
-        with c4:
-            st.empty()
             
         config_data.append({
             "type": ast['type'], 
@@ -148,7 +156,7 @@ for m in range(1, total_months + 1):
     
     for ast in assets_state:
         cfg = ast["cfg"]
-        m_contrib = cfg["monthly_inv"] * ((1 + cfg["monthly_growth_rate"]/100) ** years_passed)
+        m_contrib = max(0.0, cfg["monthly_inv"] + (cfg["monthly_growth_rate"] * years_passed))
         base_value = ast["current_market_value"] + m_contrib
         
         m_growth = base_value * (cfg["growth"] / 12)
@@ -250,7 +258,7 @@ simple_returns = np.exp(random_returns) - 1
 for m in range(1, total_months + 1):
     prev_vals = sim_results[m - 1, :]
     years_passed = (m - 1) // 12
-    m_contrib = sum(cfg["monthly_inv"] * ((1 + cfg["monthly_growth_rate"]/100) ** years_passed) for cfg in config_data)
+    m_contrib = sum(max(0.0, cfg["monthly_inv"] + (cfg["monthly_growth_rate"] * years_passed)) for cfg in config_data)
     
     base_vals = prev_vals + m_contrib
     r = simple_returns[m - 1, :]
