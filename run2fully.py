@@ -12,16 +12,16 @@ st.set_page_config(
 )
 st.title("Run2Fully ETF複利計算機")
 
-# 注入 GA4 追蹤代碼（請將 G-XXXXXXXXXX 替換成你的真實衡量 ID）
-<!-- Google tag (gtag.js) -->
+# 注入 GA4 追蹤代碼（必須用 st.components.v1.html 包起來，Python 才不會報錯）
+st.components.v1.html("""
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-5ZRFBNVN92"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-
   gtag('config', 'G-5ZRFBNVN92');
 </script>
+""", height=0)
 
 st.markdown("本系統採用長期平均回報率，模擬多種投資配置及風險情境下的資產增長軌跡。\n\n*網站內容僅為數據推導，不構成投資建議。")
 
