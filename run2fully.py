@@ -5,13 +5,13 @@ import altair as alt
 
 # 頁面基本設定
 st.set_page_config(
-    page_title="Run2Fully多資產複利計算機",
+    page_title="Run2Fully ETF複利計算機",
     page_icon="https://www.run2fully.com/assets/favicon.png",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
-st.title("Run2Fully多資產複利計算機")
-st.markdown("本系統採用長期平均回報率，模擬多種投資配置及風險情境下的資產增長軌跡。\n\n*網站內容僅為數據推導，不構成投資建議。")
+st.title("Run2Fully ETF複利計算機")
+st.markdown("本系統採用長期平均回報率，模擬多種ETF投資配置及風險情境下的資產增長軌跡。\n\n*網站內容僅為數據推導，不構成投資建議。")
 
 # 隱藏 Streamlit 圖表內建的懸浮工具列 (防止用戶在手機版點擊放大、轉換成表格等)
 st.markdown(
@@ -61,20 +61,20 @@ config_data = []
 
 # 各資產的波動率設定 (蒙地卡羅模擬)
 vol_map = {
-    "市值型股票 (如 0050/VTI)": 0.15,
-    "配息型股票 (如 00878/高股息)": 0.12,
-    "債券型資產": 0.05,
+    "市值型ETF(如0050/VTI)": 0.15,
+    "配息型ETF(如00878/SCHD)": 0.12,
+    "債券型ETF(如00965B/BND)": 0.05,
     "市值型": 0.15,
     "配息型": 0.12,
     "債券型": 0.05
 }
 
 if mode == "單選投資標的":
-    asset_type = st.selectbox("選擇資產類型", ["市值型股票 (如 0050/VTI)", "配息型股票 (如 00878/高股息)", "債券型資產"])
+    asset_type = st.selectbox("選擇資產類型", ["市值型ETF(如0050/VTI)", "配息型ETF(如00878/SCHD)", "債券型ETF(如00965B/BND)"])
     
-    if asset_type == "市值型股票 (如 0050/VTI)":
+    if asset_type == "市值型ETF(如0050/VTI)":
         def_g, def_y = 8.0, 3.0
-    elif asset_type == "配息型股票 (如 00878/高股息)":
+    elif asset_type == "配息型ETF(如00878/SCHD)":
         def_g, def_y = 2.0, 6.5
     else:
         def_g, def_y = 0.5, 4.0
