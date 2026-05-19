@@ -10,9 +10,20 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
-
 st.title("Run2Fully多資產複利計算機")
 st.markdown("本系統採用長期平均回報率，模擬多種投資配置及風險情境下的資產增長軌跡。\n\n*網站內容僅為數據推導，不構成投資建議。")
+
+# 隱藏 Streamlit 圖表內建的懸浮工具列 (防止用戶在手機版點擊放大、轉換成表格等)
+st.markdown(
+    """
+    <style>
+    [data-testid="stElementToolbar"] {
+        display: none !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 # ==========================================
 # UI 介面設計：1. 基礎資金與時間 (主畫面)
@@ -283,13 +294,13 @@ deterministic_path[1:] = df["期末帳戶總市值"]
     
 mc_chart_df = pd.DataFrame({
     "月份": list(range(0, total_months + 1)),
-    "悲觀情況 (後 10% 分位數)": p10_mc,
-    "中位數情況 (50% 分位數)": p50_mc,
-    "確定性均值 (理想狀態)": deterministic_path,
-    "樂觀情況 (前 10% 分位數)": p90_mc
+    "悲觀 (P10)": p10_mc,
+    "平均 (P50)": p50_mc,
+    "理想 (均值)": deterministic_path,
+    "樂觀 (P90)": p90_mc
 })
 mc_chart_df["年"] = mc_chart_df["月份"] / 12
-mc_melt = mc_chart_df.melt(id_vars=["年", "月份"], value_vars=["悲觀情況 (後 10% 分位數)", "中位數情況 (50% 分位數)", "確定性均值 (理想狀態)", "樂觀情況 (前 10% 分位數)"], var_name="情境", value_name="市值")
+mc_melt = mc_chart_df.melt(id_vars=["年", "月份"], value_vars=["悲觀 (P10)", "平均 (P50)", "理想 (均值)", "樂觀 (P90)"], var_name="情境", value_name="市值")
 
 mc_altair = alt.Chart(mc_melt).mark_line().encode(
     x=alt.X("年:Q", title="年", axis=alt.Axis(format="d")),
@@ -469,9 +480,14 @@ else:
                 f"由於您設定的提領率 ({withdraw_pct:.2f}%) 偏高，在現實市場的真實波動與「順序風險」下，"
                 f"資產極可能提早乾涸，此結果僅供理想模型下的對照參考，請勿以此做為唯一的真實退休規劃依據！"
             )
+        if is_inflation:
+            balance_desc = f"您的股票帳戶名目餘額仍剩餘 **{round(w_fund_nominal):,}** 元 (實質購買力折現後為 **{round(w_fund_real):,}** 元)"
+        else:
+            balance_desc = f"您的股票帳戶餘額仍剩餘 **{round(w_fund_nominal):,}** 元 (不考慮通膨影響)"
+            
         sim_result_text = (
             f"🎉 **模擬結果 - 恭喜！您的退休提領計畫極其穩健！**\n\n"
-            f"資產可永續支應 **40 年以上**！在模擬第 40 年底，您的股票帳戶名目餘額仍剩餘 **{round(w_fund_nominal):,}** 元 (實質購買力折現後為 **{round(w_fund_real):,}** 元)。\n"
+            f"資產可永續支應 **40 年以上**！在模擬第 40 年底，{balance_desc}。\n"
             f"一路上成功支應了高達 **{round(total_withdrawn_nominal):,}** 元 的退休生活開銷！"
             f"{ideal_note}"
         )
@@ -514,10 +530,15 @@ else:
         
     st.markdown("📊 **提領期資產餘額與累積提取生活費動態圖**")
     w_chart_data = w_df.copy()
+    w_chart_data = w_chart_data.rename(columns={
+        "帳戶餘額_名目": "餘額 (名目)",
+        "帳戶餘額_實質": "餘額 (實質)",
+        "累積提領金額(名目)": "累積提領"
+    })
     if is_inflation:
-        w_melt = w_chart_data.melt(id_vars=["年"], value_vars=["帳戶餘額_名目", "帳戶餘額_實質", "累積提領金額(名目)"], var_name="項目", value_name="金額")
+        w_melt = w_chart_data.melt(id_vars=["年"], value_vars=["餘額 (名目)", "餘額 (實質)", "累積提領"], var_name="項目", value_name="金額")
     else:
-        w_melt = w_chart_data.melt(id_vars=["年"], value_vars=["帳戶餘額_名目", "累積提領金額(名目)"], var_name="項目", value_name="金額")
+        w_melt = w_chart_data.melt(id_vars=["年"], value_vars=["餘額 (名目)", "累積提領"], var_name="項目", value_name="金額")
 
     w_altair = alt.Chart(w_melt).mark_line().encode(
         x=alt.X("年:Q", title="年", axis=alt.Axis(format="d")),
@@ -538,10 +559,14 @@ st.dataframe(df, use_container_width=True, hide_index=True)
 st.markdown("---")
 st.subheader("📈 累積期財富幾何成長曲線")
 area_chart_df = df.copy()
-if "累積提領現金" in df.columns:
-    area_melt = area_chart_df.melt(id_vars=["年"], value_vars=["期末帳戶總市值", "累積提領現金"], var_name="項目", value_name="金額")
+area_chart_df = area_chart_df.rename(columns={
+    "期末帳戶總市值": "總市值",
+    "累積提領現金": "累積提領"
+})
+if "累積提領" in area_chart_df.columns:
+    area_melt = area_chart_df.melt(id_vars=["年"], value_vars=["總市值", "累積提領"], var_name="項目", value_name="金額")
 else:
-    area_melt = area_chart_df.melt(id_vars=["年"], value_vars=["期末帳戶總市值"], var_name="項目", value_name="金額")
+    area_melt = area_chart_df.melt(id_vars=["年"], value_vars=["總市值"], var_name="項目", value_name="金額")
 
 area_altair = alt.Chart(area_melt).mark_area(opacity=0.5).encode(
     x=alt.X("年:Q", title="年", axis=alt.Axis(format="d")),
