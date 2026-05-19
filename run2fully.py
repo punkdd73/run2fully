@@ -5,13 +5,13 @@ import altair as alt
 
 # 頁面基本設定
 st.set_page_config(
-    page_title="Run2Fully ETF複利計算機",
+    page_title="Run2Fully多資產複利計算機",
     page_icon="https://www.run2fully.com/assets/favicon.png",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
-st.title("Run2Fully ETF複利計算機")
-st.markdown("本系統採用長期平均回報率，模擬多種ETF投資配置及風險情境下的資產增長軌跡。\n\n*網站內容僅為數據推導，不構成投資建議。")
+st.title("Run2Fully多資產複利計算機")
+st.markdown("本系統採用長期平均回報率，模擬多種投資配置及風險情境下的資產增長軌跡。\n\n*網站內容僅為數據推導，不構成投資建議。")
 
 # 隱藏 Streamlit 圖表內建的懸浮工具列 (防止用戶在手機版點擊放大、轉換成表格等)
 st.markdown(
@@ -85,7 +85,7 @@ if mode == "單選投資標的":
     with col2:
         monthly_inv = st.number_input("每月定額(元)", value=0, step=1000)
     with col3:
-        monthly_g = st.number_input("定額年成長(元)", value=0, step=100)
+        monthly_g = st.number_input("逐年增加定額(元)；例如每年增加$500/月", value=0, step=100)
         
     col4, col5, col6 = st.columns(3)
     with col4:
@@ -118,7 +118,7 @@ else:
         with c2:
             m_inv = st.number_input("每月定額(元)", value=0, step=1000, key=f"m_inv_{i}")
         with c3:
-            m_g = st.number_input("定額年成長(元)", value=0, step=100, key=f"m_g_{i}")
+            m_g = st.number_input("逐年增加定額(元)；例如每年增加$500/月", value=0, step=100, key=f"m_g_{i}")
             
         c4, c5, c6 = st.columns(3)
         with c4:
@@ -226,7 +226,7 @@ with kpi2:
 roi = ((global_current_market_value + global_total_cash_withdrawn - total_capital_added) / total_capital_added * 100) if total_capital_added > 0 else 0.0
 
 with kpi3:
-    st.metric(label="總投資報酬率 (含已拿走現金)", value=f"{roi:.2f}%")
+    st.metric(label="總投資報酬率 (含已領配息現金)", value=f"{roi:.2f}%")
 
 st.info(f"💡 本次計畫總計投入本金總額：**${round(total_capital_added):,}** 元。")
 
@@ -235,7 +235,7 @@ st.info(f"💡 本次計畫總計投入本金總額：**${round(total_capital_ad
 # ==========================================
 st.markdown("---")
 st.subheader("🎲 4. 波動風險評估 (蒙地卡羅隨機路徑模擬)")
-st.markdown("真實市場充斥波動與「順序風險」。本模組根據資產配置的年化波動度，在背景隨機生成 **250 條** 股市波動路徑，助您評估悲觀、平均及樂觀情境。")
+st.markdown("真實市場充斥波動與「順序風險」。本模組根據資產配置的年化波動度，在背景隨機生成250條股市波動路徑，助您評估悲觀、平均及樂觀情境。")
 
 total_inv_per_asset = [cfg["init_inv"] + cfg["monthly_inv"] * total_months for cfg in config_data]
 total_inv_sum = sum(total_inv_per_asset)
@@ -248,37 +248,38 @@ else:
 portfolio_annual_return = sum((cfg["growth"] + cfg["yield"]) * w for cfg, w in zip(config_data, weights))
 portfolio_volatility = sum(vol_map.get(cfg["type"], 0.1) * w for cfg, w in zip(config_data, weights))
 
-total_reinvested_return = sum((cfg["growth"] + (cfg["yield"] if cfg["reinvest"] else 0)) * w for cfg, w in zip(config_data, weights))
-total_account_return = portfolio_annual_return
-stay_ratio = (total_reinvested_return / total_account_return) if total_account_return > 0 else 1.0
-
 st.markdown(f"💼 當前配置特徵值：預估長期加權年化總回報率 **`{portfolio_annual_return*100:.1f}%`**，預估長期年化波動度 **`{portfolio_volatility*100:.1f}%`**。")
-
-is_mc_real = False
 
 np.random.seed(42)
 num_simulations = 250
 sim_results = np.zeros((total_months + 1, num_simulations))
-sim_results[0, :] = float(total_init_investment)
 
-mu_m = (portfolio_annual_return - 0.5 * (portfolio_volatility ** 2)) / 12
-sigma_m = portfolio_volatility / np.sqrt(12)
-
-random_returns = np.random.normal(loc=mu_m, scale=sigma_m, size=(total_months, num_simulations))
-simple_returns = np.exp(random_returns) - 1
-
-for m in range(1, total_months + 1):
-    prev_vals = sim_results[m - 1, :]
-    years_passed = (m - 1) // 12
-    m_contrib = sum(max(0.0, cfg["monthly_inv"] + (cfg["monthly_growth_rate"] * years_passed)) for cfg in config_data)
+for cfg in config_data:
+    asset_sim_results = np.zeros((total_months + 1, num_simulations))
+    asset_sim_results[0, :] = float(cfg["init_inv"])
     
-    base_vals = prev_vals + m_contrib
-    r = simple_returns[m - 1, :]
+    vol = vol_map.get(cfg["type"], 0.1)
+    asset_return = cfg["growth"] + (cfg["yield"] if cfg["reinvest"] else 0.0)
     
-    account_r = r * stay_ratio
-    end_vals = base_vals * (1 + account_r)
-    end_vals = np.maximum(end_vals, 0.0)
-    sim_results[m, :] = end_vals
+    mu_m = (asset_return - 0.5 * (vol ** 2)) / 12
+    sigma_m = vol / np.sqrt(12)
+    
+    random_returns = np.random.normal(loc=mu_m, scale=sigma_m, size=(total_months, num_simulations))
+    simple_returns = np.exp(random_returns) - 1
+    
+    for m in range(1, total_months + 1):
+        prev_vals = asset_sim_results[m - 1, :]
+        years_passed = (m - 1) // 12
+        m_contrib = max(0.0, cfg["monthly_inv"] + (cfg["monthly_growth_rate"] * years_passed))
+        
+        base_vals = prev_vals + m_contrib
+        r = simple_returns[m - 1, :]
+        
+        end_vals = base_vals * (1 + r)
+        end_vals = np.maximum(end_vals, 0.0)
+        asset_sim_results[m, :] = end_vals
+        
+    sim_results += asset_sim_results
     
 p10_mc_nominal = np.percentile(sim_results, 10, axis=1)
 p50_mc_nominal = np.percentile(sim_results, 50, axis=1)
@@ -294,34 +295,34 @@ deterministic_path[1:] = df["期末帳戶總市值"]
     
 mc_chart_df = pd.DataFrame({
     "月份": list(range(0, total_months + 1)),
-    "悲觀 (P10)": p10_mc,
-    "平均 (P50)": p50_mc,
-    "理想 (均值)": deterministic_path,
-    "樂觀 (P90)": p90_mc
+    "悲觀": p10_mc,
+    "平均": p50_mc,
+    "理想": deterministic_path,
+    "樂觀": p90_mc
 })
 mc_chart_df["年"] = mc_chart_df["月份"] / 12
-mc_melt = mc_chart_df.melt(id_vars=["年", "月份"], value_vars=["悲觀 (P10)", "平均 (P50)", "理想 (均值)", "樂觀 (P90)"], var_name="情境", value_name="市值")
+mc_melt = mc_chart_df.melt(id_vars=["年", "月份"], value_vars=["悲觀", "平均", "理想", "樂觀"], var_name="情境", value_name="市值")
 
 mc_altair = alt.Chart(mc_melt).mark_line().encode(
     x=alt.X("年:Q", title="年", axis=alt.Axis(format="d")),
     y=alt.Y("市值:Q", title="市值", axis=alt.Axis(format=",d")),
-    color=alt.Color("情境:N", sort=["悲觀 (P10)", "平均 (P50)", "理想 (均值)", "樂觀 (P90)"], legend=alt.Legend(title=None, orient="bottom")),
+    color=alt.Color("情境:N", sort=["悲觀", "平均", "理想", "樂觀"], legend=alt.Legend(title=None, orient="bottom")),
     tooltip=[alt.Tooltip("年:Q", title="年", format=".1f"), alt.Tooltip("情境:N", title="情境"), alt.Tooltip("市值:Q", title="市值", format=",.0f")]
 ).properties(height=400)
 st.altair_chart(mc_altair, use_container_width=True)
 
 col_mc1, col_mc2, col_mc3, col_mc4 = st.columns(4)
-col_mc1.metric("悲觀情況下股票市值 (P10)", f"${round(p10_mc[-1]):,}")
-col_mc2.metric("中位數情況下股票市值 (P50)", f"${round(p50_mc[-1]):,}")
-col_mc3.metric("確定性均值下股票市值 (理想)", f"${round(deterministic_path[-1]):,}")
-col_mc4.metric("樂觀情況下股票市值 (P90)", f"${round(p90_mc[-1]):,}")
+col_mc1.metric("悲觀市值 (10%最差情況)", f"${round(p10_mc[-1]):,}")
+col_mc2.metric("中位數市值 (50%平均情況)", f"${round(p50_mc[-1]):,}")
+col_mc3.metric("確定性均值 (理想情況)", f"${round(deterministic_path[-1]):,}")
+col_mc4.metric("樂觀市值 (10%最好情況)", f"${round(p90_mc[-1]):,}")
 
 # ==========================================
 # UI 介面設計：退休提領期模擬 (Withdrawal Phase)
 # ==========================================
 st.markdown("---")
 st.subheader("🍸 5. 退休提領期模擬 (永續提領率測算)")
-st.markdown("當累積期結束後，資產即進入**「提領期」**。本模組負責模擬您開始每年提取生活費後，資產能否實現「永續活水」，還是會提前坐吃山空？")
+st.markdown("當累積期結束後，資產即進入「提領期」。本模組負責模擬您開始每年提取生活費後，資產能否實現「永續活水」，還是會提前坐吃山空？")
 
 # 建立版面區塊
 top_col1, top_col2 = st.columns(2)
@@ -470,7 +471,10 @@ else:
     if exhaust_month != -1:
         exhaust_year = exhaust_month // 12
         exhaust_m_rem = exhaust_month % 12
-        sim_result_text = f"🚨 **模擬結果 - 警報：您的財務水庫預計可支應：{exhaust_year} 年又 {exhaust_m_rem} 個月 (即模擬第 {exhaust_month} 個月) 乾涸！**\n\n一路上共無情支應了生活費 **{round(total_withdrawn_nominal):,}** 元。"
+        if withdraw_mode == "4% 法則":
+            sim_result_text = f"🚨 **退休提領模擬分析 (警示)：**\n\n您的帳戶資金預計在第 **{exhaust_year} 年又 {exhaust_m_rem} 個月** (第 {exhaust_month} 個月) 宣告枯竭。\n\n期間累計提取生活費總額：**{round(total_withdrawn_nominal):,}** 元。"
+        else:
+            sim_result_text = f"🚨 **模擬結果 - 警報：您的自訂提領計畫將會乾涸！**\n\n財務水庫預計僅可支應 **{exhaust_year} 年又 {exhaust_m_rem} 個月** (即模擬第 {exhaust_month} 個月) 即告乾涸！\n\n期間共支應了生活費 **{round(total_withdrawn_nominal):,}** 元。"
     else:
         # 當模擬成功時，如果提領率過高，在成功訊息後加上提醒
         ideal_note = ""
@@ -485,17 +489,28 @@ else:
         else:
             balance_desc = f"您的股票帳戶餘額仍剩餘 **{round(w_fund_nominal):,}** 元 (不考慮通膨影響)"
             
-        sim_result_text = (
-            f"🎉 **模擬結果 - 恭喜！您的退休提領計畫極其穩健！**\n\n"
-            f"資產可永續支應 **40 年以上**！在模擬第 40 年底，{balance_desc}。\n"
-            f"一路上成功支應了高達 **{round(total_withdrawn_nominal):,}** 元 的退休生活開銷！"
-            f"{ideal_note}"
-        )
+        if withdraw_mode == "4% 法則":
+            sim_result_text = (
+                f"🟢 **退休提領模擬分析：**\n\n"
+                f"在當前設定下，資產可永續支應 **40 年以上**（未出現乾涸狀況）。\n"
+                f"在模擬第 40 年底，{balance_desc}。\n"
+                f"模擬期間累計提取生活費總額：**{round(total_withdrawn_nominal):,}** 元。"
+                f"{ideal_note}"
+            )
+        else:
+            sim_result_text = (
+                f"🎉 **模擬結果 - 恭喜！您的自訂退休提領計畫極其穩健！**\n\n"
+                f"您的自訂生活費支應計畫可永續支應 **40 年以上**！在模擬第 40 年底，{balance_desc}。\n"
+                f"一路上成功支應了您設定的退休生活開銷，累計提領：**{round(total_withdrawn_nominal):,}** 元！"
+                f"{ideal_note}"
+            )
 
     # --- Render integrated box FIRST (directly below buttons, as pointed by arrow) ---
     integrated_msg = f"{withdrawal_desc}\n\n---\n\n{sim_result_text}"
     
-    if withdraw_pct <= 5.0:
+    if exhaust_month != -1:
+        st.error(integrated_msg)
+    elif withdraw_pct <= 5.0:
         st.success(integrated_msg)
     elif withdraw_pct <= 8.0:
         st.warning(integrated_msg)
@@ -504,7 +519,7 @@ else:
 
     # --- Render safety assessment warnings SECOND (below integrated box) ---
     # 提領率安全評估與警示系統
-    st.markdown("### ⚠️ 提領率安全度評估 (重要警示)")
+    st.markdown("### ⚠️ 提領率安全度評估示警")
     if withdraw_pct > 8.0:
         st.error(
             f"🚨 **極高風險警報：自訂年提領率達 {withdraw_pct:.2f}%！**\n\n"
