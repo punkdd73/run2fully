@@ -462,7 +462,7 @@ else:
             )
         sim_result_text = (
             f"🎉 **模擬結果 - 恭喜！您的退休提領計畫極其穩健！**\n\n"
-            f"資產可永續支應 **40 年以上**！在模擬第 100 年底，您的股票帳戶名目餘額仍剩餘 **{round(w_fund_nominal):,}** 元 (實質購買力折現後為 **{round(w_fund_real):,}** 元)。\n"
+            f"資產可永續支應 **40 年以上**！在模擬第 40 年底，您的股票帳戶名目餘額仍剩餘 **{round(w_fund_nominal):,}** 元 (實質購買力折現後為 **{round(w_fund_real):,}** 元)。\n"
             f"一路上成功支應了高達 **{round(total_withdrawn_nominal):,}** 元 的退休生活開銷！"
             f"{ideal_note}"
         )
