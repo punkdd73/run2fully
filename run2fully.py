@@ -5,12 +5,24 @@ import altair as alt
 
 # 頁面基本設定
 st.set_page_config(
-    page_title="Run2Fully多資產複利計算機",
+    page_title="Run2Fully ETF複利計算機",
     page_icon="https://www.run2fully.com/assets/favicon.png",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
-st.title("Run2Fully多資產複利計算機")
+st.title("Run2Fully ETF複利計算機")
+
+# 注入 GA4 追蹤代碼（請將 G-XXXXXXXXXX 替換成你的真實衡量 ID）
+st.components.v1.html("""
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-5ZRFBNVN92');
+</script>
+""", height=0)
+
 st.markdown("本系統採用長期平均回報率，模擬多種投資配置及風險情境下的資產增長軌跡。\n\n*網站內容僅為數據推導，不構成投資建議。")
 
 # 隱藏 Streamlit 圖表內建的懸浮工具列 (防止用戶在手機版點擊放大、轉換成表格等)
