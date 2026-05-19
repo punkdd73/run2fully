@@ -14,7 +14,7 @@ st.title("Run2Fully ETF複利計算機")
 
 # 注入 GA4 追蹤代碼（請將 G-XXXXXXXXXX 替換成你的真實衡量 ID）
 st.components.v1.html("""
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-5ZRFBNVN92"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
