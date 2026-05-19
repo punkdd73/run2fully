@@ -3,7 +3,11 @@ import pandas as pd
 import numpy as np
 
 # 頁面基本設定
-st.set_page_config(page_title="Run2Fully多資產複利計算機", layout="wide")
+st.set_page_config(
+    page_title="Run2Fully多資產複利計算機",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 st.title("Run2Fully多資產複利計算機")
 st.markdown("本系統採用長期平均回報率，精確模擬投資在本金與配息再投入下的增長軌跡。")
