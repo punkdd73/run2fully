@@ -61,20 +61,20 @@ config_data = []
 
 # 各資產的波動率設定 (蒙地卡羅模擬)
 vol_map = {
-    "市值型ETF(如0050/VTI)": 0.15,
-    "配息型ETF(如00878/SCHD)": 0.12,
-    "債券型ETF(如00965B/BND)": 0.05,
+    "市值型ETF (如0050/VTI)": 0.15,
+    "配息型ETF (如00878/SCHD)": 0.12,
+    "債券型ETF (如00679B/BND)": 0.05,
     "市值型": 0.15,
     "配息型": 0.12,
     "債券型": 0.05
 }
 
 if mode == "單選投資標的":
-    asset_type = st.selectbox("選擇資產類型", ["市值型ETF(如0050/VTI)", "配息型ETF(如00878/SCHD)", "債券型ETF(如00965B/BND)"])
+    asset_type = st.selectbox("選擇資產類型", ["市值型ETF (如0050/VTI)", "配息型ETF (如00878/SCHD)", "債券型ETF (如00679B/BND)"])
     
-    if asset_type == "市值型ETF(如0050/VTI)":
+    if asset_type == "市值型ETF (如0050/VTI)":
         def_g, def_y = 8.0, 3.0
-    elif asset_type == "配息型ETF(如00878/SCHD)":
+    elif asset_type == "配息型ETF (如00878/SCHD)":
         def_g, def_y = 2.0, 6.5
     else:
         def_g, def_y = 0.5, 4.0
@@ -105,9 +105,9 @@ else:
     st.markdown("請分別設定各資產的投入金額與回報率（各資產獨立計算）：")
     
     assets_config = [
-        {"name": "📈 市值型股票 (如 0050)", "type": "市值型", "def_g": 8.0, "def_y": 3.0, "def_r": True},
-        {"name": "💰 配息型股票 (如 00878)", "type": "配息型", "def_g": 2.0, "def_y": 6.5, "def_r": False},
-        {"name": "🛡️ 債券型資產", "type": "債券型", "def_g": 0.5, "def_y": 4.0, "def_r": True}
+        {"name": "📈 市值型ETF (如0050/VTI)", "type": "市值型", "def_g": 8.0, "def_y": 3.0, "def_r": True},
+        {"name": "💰 配息型ETF (如00878/SCHD)", "type": "配息型", "def_g": 2.0, "def_y": 6.5, "def_r": False},
+        {"name": "🛡️ 債券型ETF (如00679B/BND)", "type": "債券型", "def_g": 0.5, "def_y": 4.0, "def_r": True}
     ]
     
     for i, ast in enumerate(assets_config):
