@@ -13,20 +13,22 @@ st.set_page_config(
 st.title("Run2Fully ETF複利計算機")
 st.markdown("本系統採用長期平均回報率，模擬多種投資配置及風險情境下的資產增長軌跡。\n\n*網站內容僅為數據推導，不構成投資建議。")
 
-# 隱藏 Streamlit 圖表內建的懸浮工具列 (防止用戶在手機版點擊放大、轉換成表格等)
 st.markdown(
     """
     <style>
+    /* 隱藏圖表工具列 */
     [data-testid="stElementToolbar"] {
         display: none !important;
     }
-#調整側邊選單寬度，減少頂部間距
+    
+    /* 調整側邊選單寬度，減少頂部間距 */
     [data-testid="stSidebar"] {
-        min-width: 200px;
-        max-width: 220px; 
+        width: 220px !important;
+        min-width: 220px !important;
+        max-width: 220px !important;
     }
     .stSidebar [data-testid="stVerticalBlock"] {
-        padding-top: 1rem;
+        padding-top: 1rem !important;
     }
     </style>
     """,
