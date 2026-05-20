@@ -21,8 +21,11 @@ def inject_tracking_and_ads():
       gtag('js', new Date());
       gtag('config', 'G-5ZRFBNVN92');
     </script>
+
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7469928523376219"
+    crossorigin="anonymous"></script>
     """
-    
+       
     # 檢查是否已經注入過，避免 Streamlit 重複執行時疊加代碼
     if "G-5ZRFBNVN92" not in html_content:
         # 直接在 </head> 標籤閉合前無情插入，變成網頁的原生大腦
