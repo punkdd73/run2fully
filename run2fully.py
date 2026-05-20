@@ -20,13 +20,11 @@ st.markdown(
     [data-testid="stElementToolbar"] {
         display: none !important;
     }
-
-    /* 調整側邊欄寬度 */
+#調整側邊選單寬度，減少頂部間距
     [data-testid="stSidebar"] {
         min-width: 200px;
         max-width: 220px; 
     }
-    /* 減少側邊欄頂部間距 */
     .stSidebar [data-testid="stVerticalBlock"] {
         padding-top: 1rem;
     }
