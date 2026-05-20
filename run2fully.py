@@ -594,12 +594,11 @@ st.altair_chart(area_altair, use_container_width=True)
 
 # --- 側邊欄導航 ---
 with st.sidebar:
-    st.title("Run2Fully")
-    st.markdown("---")
-    st.markdown("### Run2Fully 投資雜談")
+     st.markdown("### Run2Fully 投資雜談")
+     st.markdown("---")
     
     # 這是連結到您已準備好的靜態 HTML 文章
-    st.page_link("https://www.run2fully.com/blog/compound.html", label="寫在追尋複利之前", icon="📊")
+    st.page_link("https://www.run2fully.com/blog/compound.html", label="寫在追尋複利之前", icon="☝️")
 
 st.markdown("---")
 st.caption("© 2026 Run2Fully. All rights reserved.")
