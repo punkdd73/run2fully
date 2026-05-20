@@ -3,6 +3,36 @@ import pandas as pd
 import numpy as np
 import altair as alt
 
+# ==================== 1. 全域大腦注入：徹底解決 iframe 封鎖問題 ====================
+def inject_tracking_and_ads():
+    # 自動定位 Render 伺服器上 Streamlit 內建的真正 index.html 檔案路徑
+    index_path = os.path.join(os.path.dirname(st.__file__), 'static', 'index.html')
+    
+    with open(index_path, 'r', encoding='utf-8') as f:
+        html_content = f.read()
+    
+    # 你的 GA4 追蹤代碼（未來如果要加 AdSense 廣告審查代碼，直接貼在下面即可）
+    tracking_code = """
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-5ZRFBNVN92"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-5ZRFBNVN92');
+    </script>
+    """
+    
+    # 檢查是否已經注入過，避免 Streamlit 重複執行時疊加代碼
+    if "G-5ZRFBNVN92" not in html_content:
+        # 直接在 </head> 標籤閉合前無情插入，變成網頁的原生大腦
+        updated_content = html_content.replace("</head>", f"{tracking_code}</head>")
+        with open(index_path, 'w', encoding='utf-8') as f:
+            f.write(updated_content)
+
+# 啟動時立刻執行注入（此時還沒渲染任何 UI，完全合法）
+inject_tracking_and_ads()
+# ==============================================================================
+
 # 頁面基本設定
 st.set_page_config(
     page_title="Run2Fully ETF複利計算機",
@@ -11,18 +41,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 st.title("Run2Fully ETF複利計算機")
-
-# 注入 GA4 追蹤代碼（必須用 st.components.v1.html 包起來，Python 才不會報錯）
-st.components.v1.html("""
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-5ZRFBNVN92"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-5ZRFBNVN92');
-</script>
-""", height=0)
-
 st.markdown("本系統採用長期平均回報率，模擬多種投資配置及風險情境下的資產增長軌跡。\n\n*網站內容僅為數據推導，不構成投資建議。")
 
 # 隱藏 Streamlit 圖表內建的懸浮工具列 (防止用戶在手機版點擊放大、轉換成表格等)
