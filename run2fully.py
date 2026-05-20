@@ -612,4 +612,4 @@ with st.sidebar:
      st.page_link("https://www.run2fully.com/blog/turnzero.html", label="**別太擔心「賠光」**", icon="☝️")
 
 st.markdown("---")
-st.caption("© 2026 Run2Fully. All rights reserved.")
+st.caption("© 2026 [Run2Fully](mailto:butw.ec@gmail.com) | All rights reserved.")
