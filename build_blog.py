@@ -73,3 +73,16 @@ for filename in os.listdir(BLOG_DIR):
             print(f"寫入 {filename} 失敗: {e}")
 
 print(f"【大功告成】已成功更新 {updated_count} 個 HTML 檔案（已完美排除當前文章連結與樣板檔）！")
+
+# sitemap同步更新
+sitemap_content = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+sitemap_content += '  <url><loc>https://www.run2fully.com/</loc><priority>1.0</priority></url>\n'
+
+for article in all_articles:
+    sitemap_content += f'  <url><loc>https://www.run2fully.com/blog/{article["filename"]}</loc><priority>0.8</priority></url>\n'
+
+sitemap_content += '</urlset>'
+
+with open("sitemap.xml", "w", encoding="utf-8") as f:
+    f.write(sitemap_content)
+print("【系統】已自動更新 sitemap.xml")
