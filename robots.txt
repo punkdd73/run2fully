@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Allow: /blog/
+Sitemap: https://www.run2fully.com/sitemap.xml
