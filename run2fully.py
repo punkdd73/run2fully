@@ -614,7 +614,7 @@ with st.sidebar:
     
     # 這是連結到您已準備好的靜態 HTML 文章
      st.page_link("https://www.run2fully.com/blog/compound.html", label="**寫在一起追尋複利之前...**", icon="☝️")
-     st.page_link("https://www.run2fully.com/blog/turnzero.html", label="**媽媽說買股容易「賠光光」？**", icon="☝️")
+     st.page_link("https://www.run2fully.com/blog/turnzero.html", label="**媽媽說炒股小心「賠光光」？**", icon="☝️")
      st.page_link("https://www.run2fully.com/blog/four_percent.html", label="**規劃你的4%永續提領**", icon="🔥")
 
 
