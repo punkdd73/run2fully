@@ -24,9 +24,9 @@ st.markdown(
     
     /* 調整側邊選單寬度，減少頂部間距 */
     [data-testid="stSidebar"] {
-        width: 250px;
-        min-width: 250px;
-        max-width: 250px;
+        width: 280px;
+        min-width: 280px;
+        max-width: 280px;
     }
     .stSidebar [data-testid="stVerticalBlock"] {
         padding-top: 1rem !important;
