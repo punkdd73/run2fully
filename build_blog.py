@@ -37,8 +37,8 @@ for filename in os.listdir(BLOG_DIR):
                 content = f.read()
             
             # 💡 終極調整：直接用純文字當暗號牆，絕對不會打錯，也不會被過濾
-            start_tag = "START_MY_LINKS"
-            end_tag = "END_MY_LINKS"
+            start_tag = "<!--AUTO_LINKS_START-->"
+            end_tag = "<!--AUTO_LINKS_END-->"
             
             if start_tag in content and end_tag in content:
                 front_part = content.split(start_tag)[0]
