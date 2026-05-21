@@ -15,9 +15,9 @@ updated_count = 0
 # 先掃描一次，把全站所有可用的文章資訊（檔名與標題）儲存成一個清單
 all_articles = []
 for filename in os.listdir(BLOG_DIR):
-    if filename.endswith(".html")
+    if filename.endswith(".html"):
         if filename == "0_template.html":
-            countinue            
+            continue            
         filepath = os.path.join(BLOG_DIR, filename)
 
         try:
