@@ -42,8 +42,8 @@ for filename in os.listdir(BLOG_DIR):
                 content = f.read()
             
             # 💡 精確對齊你縮短後的隱形暗號
-            start_tag = ""
-            end_tag = ""
+            start_tag = "<!--AUTO_LINKS_START-->"
+            end_tag = "<!--AUTO_LINKS_END-->"
             
             if start_tag in content and end_tag in content:
                 front_part = content.split(start_tag)[0]
