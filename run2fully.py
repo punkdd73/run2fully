@@ -11,8 +11,8 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 st.title("Run2Fully ETF複利計算機")
-st.image("assets/banner.jpg", caption="Run2Fully-ETF複利計算機")
-st.markdown("本系統採用長期平均回報率，模擬多種投資配置及風險情境下的資產增長軌跡。\n\n*網站內容僅為數據推導，不構成投資建議。")
+st.image("assets/banner.jpg")
+st.markdown("本系統採用長期平均回報率，模擬多種投資配置及風險情境下的資產增長軌跡，並附加提領規劃試算。\n\n網站內容僅為數據推導，不構成投資建議。")
 
 st.markdown(
     """
