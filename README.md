@@ -25,7 +25,8 @@ punkdd73.github.io/ (GitHub 專案根目錄，指向 [www.run2fully.com](https:/
 │ 
 ├── index.html                # 首頁（導頁至 app.run2fully.com，執行run2fully.py，由 Render 自動部署）
 ├── ads.txt                   # Google AdSense 廣告防偽驗證檔
-├── build_blog.py             # ⚙️ 核心自動化腳本：全自動掃描並組裝延伸閱讀清單
+├── build_blog.py             # ⚙️ 核心自動化腳本：全自動掃描並組裝延伸閱讀清單 + 生成sitemap.xml
+├── sitemap.xml               # 自動生成
 ├── CNAME                     # 轉址
 ├── requirements.txt          # 加載py套件
 ├── run2fully.py              # 計算機網站執行腳本
