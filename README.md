@@ -29,4 +29,5 @@ punkdd73.github.io/ (GitHub 專案根目錄，指向 [www.run2fully.com](https:/
 ├── CNAME                     # 轉址
 ├── requirements.txt          # 加載py套件
 ├── run2fully.py              # 計算機網站執行腳本
+├── robots.txt                # 爬蟲指引
 └── README.md                 # 本說明文件
