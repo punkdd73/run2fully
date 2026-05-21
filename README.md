@@ -14,7 +14,7 @@ punkdd73.github.io/ (GitHub 專案根目錄，指向 [www.run2fully.com](https:/
 │       └── run_build.yml     # 🤖 GitHub Actions 自動化工作流設定檔 (Node24 環境)
 │
 ├── blog/                     # 💡 部落格文章專區（由主程式以 Streamlit Pages 連回）
-│   ├── 0_template.html    # 文章基礎樣板
+│   ├── 0_template.html       # 文章基礎樣板
 │   ├── article1.html         # 文章 1（例如：蒙地卡羅波動模擬）
 │   └── article2.html         # 文章 2（例如：4% 法則生存指南）  
 │
