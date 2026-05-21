@@ -30,6 +30,11 @@ st.markdown(
     .stSidebar [data-testid="stVerticalBlock"] {
         padding-top: 1rem !important;
     }
+
+    /* 💡 新增：縮小圖片下方的區塊間距 */
+    [data-testid="stImage"] {
+        margin-bottom: -15px !important;
+    }
     </style>
     """,
     unsafe_allow_html=True
