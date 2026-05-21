@@ -1,0 +1,39 @@
+name: 執行部落格連結自動同步
+
+on:
+  workflow_dispatch: # 這行可以讓你在 GitHub 網頁上手動點按鈕執行
+
+permissions:
+  contents: write # 賦予這個工作流修改並寫回你 HTML 檔案的權限
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. 複製這份專案的程式碼到 GitHub 的虛擬主機上
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    # 2. 安裝 Python 環境
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    # 3. 執行你寫好的 build_blog.py
+    - name: Run Python Script
+      run: python build_blog.py
+
+    # 4. 如果 HTML 檔案被 Python 修改了，自動 Commit 並 Push 回你的 GitHub
+    - name: Commit and Push Changes
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add .
+        if ! git diff --staged --quiet; then
+          git commit -m "🤖 自動化機器人：同步更新延伸閱讀選單連結"
+          git push
+        else
+          echo "沒有任何檔案變更，跳過 Commit。"
+        fi
