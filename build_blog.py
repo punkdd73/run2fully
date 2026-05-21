@@ -32,14 +32,18 @@ for filename in os.listdir(BLOG_DIR):
 # 開始逐一處理每個 HTML 檔案的寫入
 for filename in os.listdir(BLOG_DIR):
     if filename.endswith(".html"):
+        # 💡 關鍵修正：後半段的寫入迴圈，也必須把樣板檔排除！
+        if filename == "0_template.html":
+            continue
+
         filepath = os.path.join(BLOG_DIR, filename)
         try:
             with open(filepath, "r", encoding="utf-8") as f:
                 content = f.read()
             
             # 💡 精確對齊你縮短後的隱形暗號
-            start_tag = "<!--AUTO_LINKS_START-->"
-            end_tag = "<!--AUTO_LINKS_END-->"
+            start_tag = ""
+            end_tag = ""
             
             if start_tag in content and end_tag in content:
                 front_part = content.split(start_tag)[0]
@@ -68,4 +72,4 @@ for filename in os.listdir(BLOG_DIR):
         except Exception as e:
             print(f"寫入 {filename} 失敗: {e}")
 
-print(f"【大功告成】已成功更新 {updated_count} 個 HTML 檔案（已完美排除當前文章連結）！")
+print(f"【大功告成】已成功更新 {updated_count} 個 HTML 檔案（已完美排除當前文章連結與樣板檔）！")
