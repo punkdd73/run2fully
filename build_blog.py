@@ -74,7 +74,44 @@ for filename in os.listdir(BLOG_DIR):
 
 print(f"【大功告成】已成功更新 {updated_count} 個 HTML 檔案（已完美排除當前文章連結與樣板檔）！")
 
-# sitemap同步更新
+# ==========================================
+# 2. 更新首頁 (index.html) 的文章列表
+# ==========================================
+index_filepath = "index.html"
+if os.path.exists(index_filepath):
+    try:
+        with open(index_filepath, "r", encoding="utf-8") as f:
+            content = f.read()
+        
+        start_tag = "<!--AUTO_LINKS_START-->"
+        end_tag = "<!--AUTO_LINKS_END-->"
+        
+        if start_tag in content and end_tag in content:
+            front_part = content.split(start_tag)[0]
+            back_part = content.split(end_tag)[-1]
+            
+            # 組裝首頁的連結 (顯示所有文章)
+            index_links = []
+            for article in all_articles:
+                index_links.append(f'<li><a href="/blog/{article["filename"]}">{article["title"]}</a></li>')
+            
+            inside_content = "\n        <ul style='line-height: 1.8; font-size: 1.1em;'>\n"
+            inside_content += "\n".join(f"            {link}" for link in index_links)
+            inside_content += "\n        </ul>\n        "
+            
+            new_content = f"{front_part}{start_tag}{inside_content}{end_tag}{back_part}"
+            
+            with open(index_filepath, "w", encoding="utf-8") as f:
+                f.write(new_content)
+            print(f"【系統】已成功更新 {index_filepath} 的文章列表！")
+        else:
+            print(f"【注意】{index_filepath} 找不到暗號標籤，略過不處理。")
+    except Exception as e:
+        print(f"寫入 {index_filepath} 失敗: {e}")
+
+# ==========================================
+# 3. sitemap 同步更新
+# ==========================================
 sitemap_content = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
 sitemap_content += '  <url><loc>https://www.run2fully.com/</loc><priority>1.0</priority></url>\n'
 
