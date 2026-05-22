@@ -613,9 +613,11 @@ with st.sidebar:
      st.markdown("---")
     
     # 這是連結到您已準備好的靜態 HTML 文章
-     st.page_link("https://www.run2fully.com/blog/compound.html", label="**寫在一起追尋複利之前...**", icon="☝️")
-     st.page_link("https://www.run2fully.com/blog/turnzero.html", label="**媽媽說炒股會「賠光光」？**", icon="☝️")
+     st.page_link("https://www.run2fully.com/blog/compound.html", label="**寫在開始追尋複利之前...**", icon="☝️")
+     st.page_link("https://www.run2fully.com/blog/turnzero.html", label="**炒股！等著「賠光光」？**", icon="☝️")
      st.page_link("https://www.run2fully.com/blog/four_percent.html", label="**規劃你的4%永續提領**", icon="🔥")
+     st.page_link("https://www.run2fully.com/blog/active_race.html", label="**少年不知「被動」好？**", icon="☝️")
+
 
 
 st.markdown("---")
