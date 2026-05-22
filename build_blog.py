@@ -41,6 +41,19 @@ for filename in os.listdir(BLOG_DIR):
             with open(filepath, "r", encoding="utf-8") as f:
                 content = f.read()
             
+            # ====== 新增：自動在 </h1> 後方加上日期 ======
+            import datetime
+            original_content = content
+            if "</h1>" in content:
+                # 檢查 </h1> 後方是否已經有 <p>YYYY-MM-DD</p> 格式，避免重複加入
+                if not re.search(r'</h1>\s*<p>\d{4}-\d{2}-\d{2}</p>', content):
+                    # 取檔案的建立時間作為文章日期 (即使是舊文章也能抓到正確時間)
+                    file_ctime = os.path.getctime(filepath)
+                    date_str = datetime.datetime.fromtimestamp(file_ctime).strftime("%Y-%m-%d")
+                    content = content.replace("</h1>", f"</h1>\n<p>{date_str}</p>", 1)
+            # ============================================
+
+            
             # 💡 精確對齊你縮短後的隱形暗號
             start_tag = "<!--AUTO_LINKS_START-->"
             end_tag = "<!--AUTO_LINKS_END-->"
@@ -68,7 +81,13 @@ for filename in os.listdir(BLOG_DIR):
                     f.write(new_content)
                 updated_count += 1
             else:
-                print(f"【注意】{filename} 找不到暗號標籤，略過不處理。")
+                # 如果找不到暗號，但是有更新日期，也要儲存檔案
+                if content != original_content:
+                    with open(filepath, "w", encoding="utf-8") as f:
+                        f.write(content)
+                    updated_count += 1
+                else:
+                    print(f"【注意】{filename} 找不到暗號標籤，略過不處理。")
         except Exception as e:
             print(f"寫入 {filename} 失敗: {e}")
 
