@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 st.title("Run2Fully ETF複利計算機")
-st.markdown("本系統採用長期平均回報率，模擬多種投資配置及風險情境，計算資產的增長軌跡，並提供提領試算。\n\n*網站內容僅為數據推導，不構成投資建議。")
+st.markdown("本系統採用長期平均回報率，模擬多種投資配置及風險情境，計算資產的增長軌跡，並提供退休提領試算。\n\n*網站內容僅為數據推導，不構成投資建議。")
 st.image("assets/banner.jpg")
 st.markdown(
     """
@@ -62,7 +62,7 @@ is_nhi = False
 is_tax_fees = False
 
 if total_months == 0:
-    st.info("💡 **請在上方設定大於 0 的投入時間！**\n\n設定完畢後，複利模擬將即時啟動，為您演算終局財富曲線，奔向複利!")
+    st.info("💡 **請在上方設定大於 0 的投入時間！**\n\n設定完畢後，複利模擬將即時啟動，為您演算終局財富曲線。")
     st.stop()
 
 # ==========================================
