@@ -617,6 +617,8 @@ with st.sidebar:
      st.page_link("https://www.run2fully.com/blog/turnzero.html", label="**炒股！等著「賠光光」？**", icon="☝️")
      st.page_link("https://www.run2fully.com/blog/four_percent.html", label="**規劃你的4%永續提領**", icon="🔥")
      st.page_link("https://www.run2fully.com/blog/active_race.html", label="**少年不知「被動」好？**", icon="☝️")
+     st.page_link("https://www.run2fully.com/blog/why_high_div.html", label="**到底該不該買高股息？**", icon="🔥")
+
 
 
 
