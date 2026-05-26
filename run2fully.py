@@ -721,7 +721,7 @@ else:
     else:
         st.experimental_set_query_params(data=b64_str)
         
-    share_url = f"https://www.run2fully.com/?data={b64_str}"
+    share_url = f"https://app.run2fully.com/?data={b64_str}"
     
     @st.cache_data(show_spinner=False)
     def get_short_url(long_url):
