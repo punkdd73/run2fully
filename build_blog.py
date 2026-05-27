@@ -51,6 +51,11 @@ for filename in os.listdir(BLOG_DIR):
                     file_ctime = os.path.getctime(filepath)
                     date_str = datetime.datetime.fromtimestamp(file_ctime).strftime("%Y-%m-%d")
                     content = content.replace("</h1>", f"</h1>\n<p>{date_str}</p>", 1)
+            
+            # ====== 新增：自動替換 canonical 與 og:url 為正確檔名 ======
+            content = re.sub(r'<link\s+rel="canonical"\s+href="[^"]*"\s*/>', f'<link rel="canonical" href="https://www.run2fully.com/blog/{filename}" />', content)
+            content = re.sub(r'<meta\s+property="og:url"\s+content="[^"]*"\s*/>', f'<meta property="og:url" content="https://www.run2fully.com/blog/{filename}" />', content)
+            # ============================================
             # ============================================
 
             
