@@ -801,6 +801,8 @@ with st.sidebar:
      st.page_link("https://www.run2fully.com/blog/why_high_div.html", label="**到底該不該買高股息？**", icon="🔥")
      st.page_link("https://www.run2fully.com/blog/why_high_div.html", label="**為何你必須強大？**", icon="☝️")
      st.page_link("https://www.run2fully.com/blog/try_short.html", label="**被動投資到底有多傻？**", icon="🔥")
+     st.page_link("https://www.run2fully.com/blog/news_are dangerous.html", label="**消息的「保存期限」**", icon="☝️")
+
 
 
 
