@@ -207,6 +207,13 @@ with tab2:
     st.subheader("首頁側邊欄連結管理")
     st.write("在這裡修改，會直接改寫 GitHub 上 `run2fully.py` 的程式碼。")
     
+    # 在產生 widget 之前清空 session_state 避免報錯
+    if st.session_state.get("clear_add_inputs"):
+        for k in ["add_url", "add_label", "add_icon"]:
+            if k in st.session_state:
+                del st.session_state[k]
+        st.session_state["clear_add_inputs"] = False
+        
     if st.session_state.get("sidebar_updated"):
         st.success("✅ 側邊欄更新成功！")
         st.session_state["sidebar_updated"] = False
@@ -287,10 +294,8 @@ with tab2:
                     
                     try:
                         repo.update_file("run2fully.py", "Admin: Update sidebar links", new_run2fully_code, run2fully_file.sha)
-                        # 清空輸入框狀態
-                        for k in ["add_url", "add_label", "add_icon"]:
-                            if k in st.session_state:
-                                st.session_state[k] = ""
+                        # 設定旗標，讓下一次執行時在 widget 產生前清空狀態
+                        st.session_state["clear_add_inputs"] = True
                         st.session_state["sidebar_updated"] = True
                         st.rerun()
                     except Exception as e:
