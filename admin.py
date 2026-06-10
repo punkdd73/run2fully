@@ -110,7 +110,9 @@ with tab1:
                     # 替換 {{FILENAME}}
                     new_html = new_html.replace('{{FILENAME}}', f'{filename}.html')
                     # 替換 <h1>
-                    new_html = re.sub(r'<h1>.*?</h1>', f'<h1>{title}</h1>', new_html, count=1)
+                    from datetime import datetime
+                    today_str = datetime.now().strftime("%Y-%m-%d")
+                    new_html = re.sub(r'<h1>.*?</h1>', f'<h1>{title}</h1>\n<p>{today_str}</p>', new_html, count=1)
                     
                     # 替換內文區塊
                     # 依據 template，內文介於 <img src="/assets/banner.jpg"> 與 下方的 <BR><BR><a href... 之間
