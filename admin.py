@@ -102,11 +102,11 @@ with tab1:
                     new_html = template_html
                     
                     # 替換 <title>
-                    new_html = re.sub(r'<title>.*?</title>', f'<title>{title} - Run2Fully 深度理財</title>', new_html)
+                    new_html = re.sub(r'<title>.*?</title>', f'<title>{title} - Run2Fully 深度理財</title>', new_html, flags=re.IGNORECASE | re.DOTALL)
                     # 替換 og:title
-                    new_html = re.sub(r'<meta property="og:title" content=".*?"\s*/>', f'<meta property="og:title" content="{title}" />', new_html)
+                    new_html = re.sub(r'<meta\s+property=["\']og:title["\']\s+content=["\'].*?["\']\s*/?>', f'<meta property="og:title" content="{title}" />', new_html, flags=re.IGNORECASE | re.DOTALL)
                     # 替換 og:description
-                    new_html = re.sub(r'<meta property="og:description" content=".*?"\s*/>', f'<meta property="og:description" content="{og_desc}" />', new_html)
+                    new_html = re.sub(r'<meta\s+property=["\']og:description["\']\s+content=["\'].*?["\']\s*/?>', f'<meta property="og:description" content="{og_desc}" />', new_html, flags=re.IGNORECASE | re.DOTALL)
                     # 替換 {{FILENAME}}
                     new_html = new_html.replace('{{FILENAME}}', f'{filename}.html')
                     # 替換 <h1>
