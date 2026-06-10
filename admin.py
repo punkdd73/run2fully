@@ -60,7 +60,7 @@ except Exception as e:
 st.title("Run2Fully 後台管理系統 ☁️")
 st.write("此後台會直接透過 API 將變更同步至 GitHub。")
 
-tab1, tab2 = st.tabs(["✍️ 發布新文章", "🔗 側邊欄連結管理"])
+tab1, tab3, tab2 = st.tabs(["✍️ 發布新文章", "📂 文章管理", "🔗 側邊欄連結管理"])
 
 # ==========================================
 # 3. 發布新文章 (Markdown -> HTML)
@@ -142,12 +142,75 @@ with tab1:
                     st.error(f"發布失敗: {e}")
 
 # ==========================================
-# 4. 管理側邊欄連結 (修改 run2fully.py)
+# 4. 文章管理 (修改與刪除)
+# ==========================================
+with tab3:
+    st.subheader("文章管理 (修改與刪除)")
+    st.write("此處列出 `/blog` 底下的所有文章。您可直接以 HTML 原始碼進行修改或刪除。")
+    
+    if st.session_state.get("article_updated"):
+        st.success("✅ 文章更新成功！")
+        st.session_state["article_updated"] = False
+        
+    if st.session_state.get("article_deleted"):
+        st.success("✅ 文章已成功刪除！")
+        st.session_state["article_deleted"] = False
+    
+    if st.button("🔄 重新載入文章列表"):
+        st.rerun()
+        
+    try:
+        blog_files = repo.get_contents("blog")
+        articles = [f for f in blog_files if f.name.endswith('.html') and f.name != '0_template.html']
+        
+        if not articles:
+            st.info("目前沒有找到任何文章。")
+        else:
+            for article in articles:
+                with st.expander(f"📄 {article.name}", expanded=False):
+                    col_edit, col_del = st.columns([8, 2])
+                    
+                    with col_edit:
+                        st.write(f"**檔案路徑：** `{article.path}`")
+                    
+                    with col_del:
+                        if st.button("🗑️ 刪除文章", key=f"del_{article.name}"):
+                            try:
+                                repo.delete_file(article.path, f"Delete blog post: {article.name}", article.sha)
+                                st.session_state["article_deleted"] = True
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"刪除失敗: {e}")
+                                
+                    st.write("#### 編輯 HTML 原始碼")
+                    file_content = article.decoded_content.decode("utf-8")
+                    new_content = st.text_area("HTML 內容", value=file_content, height=400, key=f"edit_{article.name}")
+                    
+                    if st.button("💾 儲存變更", key=f"save_{article.name}"):
+                        if new_content != file_content:
+                            try:
+                                repo.update_file(article.path, f"Update blog post: {article.name}", new_content, article.sha)
+                                st.session_state["article_updated"] = True
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"儲存失敗: {e}")
+                        else:
+                            st.info("內容沒有變動，無須儲存。")
+                            
+    except Exception as e:
+        st.error(f"讀取 `/blog` 資料夾失敗: {e}")
+
+# ==========================================
+# 5. 管理側邊欄連結 (修改 run2fully.py)
 # ==========================================
 with tab2:
     st.subheader("首頁側邊欄連結管理")
     st.write("在這裡修改，會直接改寫 GitHub 上 `run2fully.py` 的程式碼。")
     
+    if st.session_state.get("sidebar_updated"):
+        st.success("✅ 側邊欄更新成功！")
+        st.session_state["sidebar_updated"] = False
+        
     if st.button("🔄 讀取最新連結列表"):
         st.rerun()
         
@@ -184,11 +247,11 @@ with tab2:
         st.write("**➕ 新增連結：**")
         c1, c2, c3 = st.columns([4, 3, 1])
         with c1:
-            add_url = st.text_input("新網址", placeholder="https://www.run2fully.com/blog/xxx.html")
+            add_url = st.text_input("新網址", placeholder="https://www.run2fully.com/blog/xxx.html", key="add_url")
         with c2:
-            add_label = st.text_input("新標題", placeholder="**我是標題**")
+            add_label = st.text_input("新標題", placeholder="**我是標題**", key="add_label")
         with c3:
-            add_icon = st.text_input("新 Icon", placeholder="☝️")
+            add_icon = st.text_input("新 Icon", placeholder="☝️", key="add_icon")
             
         if add_url and add_label:
             if not add_icon:
@@ -224,8 +287,12 @@ with tab2:
                     
                     try:
                         repo.update_file("run2fully.py", "Admin: Update sidebar links", new_run2fully_code, run2fully_file.sha)
-                        st.success("✅ 側邊欄更新成功！重新整理後即可看到最新狀態。")
-                        st.balloons()
+                        # 清空輸入框狀態
+                        for k in ["add_url", "add_label", "add_icon"]:
+                            if k in st.session_state:
+                                st.session_state[k] = ""
+                        st.session_state["sidebar_updated"] = True
+                        st.rerun()
                     except Exception as e:
                         st.error(f"更新失敗: {e}")
                 else:
