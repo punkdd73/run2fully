@@ -102,7 +102,7 @@ with tab1:
                     new_html = template_html
                     
                     # 替換 <title>
-                    new_html = re.sub(r'<title>.*?</title>', f'<title>{title} - Run2Fully 深度理財</title>', new_html, flags=re.IGNORECASE | re.DOTALL)
+                    new_html = re.sub(r'<title>.*?</title>', f'<title>{title}</title>', new_html, flags=re.IGNORECASE | re.DOTALL)
                     # 替換 og:title
                     new_html = re.sub(r'<meta\s+property=["\']og:title["\']\s+content=["\'].*?["\']\s*/?>', f'<meta property="og:title" content="{title}" />', new_html, flags=re.IGNORECASE | re.DOTALL)
                     # 替換 og:description
