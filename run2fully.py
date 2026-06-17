@@ -799,6 +799,7 @@ with st.sidebar:
      st.page_link("https://www.run2fully.com/blog/four_percent.html", label="**規劃你的4%永續提領**", icon="🔥")
      st.page_link("https://www.run2fully.com/blog/active_race.html", label="**少年不知「被動」好？**", icon="☝️")
      st.page_link("https://www.run2fully.com/blog/why_high_div.html", label="**到底該不該買高股息？**", icon="🔥")
+     st.page_link("https://www.run2fully.com/blog/high_div_explain.html", label="**「高股息四大門派」民間攻略", icon="🔥")
      st.page_link("https://www.run2fully.com/blog/dividend_truth.html", label="**「配息」的底層邏輯**", icon="🔥")
      st.page_link("https://www.run2fully.com/blog/why_high_div.html", label="**為何你必須強大？**", icon="☝️")
      st.page_link("https://www.run2fully.com/blog/try_short.html", label="**被動投資到底有多傻？**", icon="🔥")
@@ -806,7 +807,6 @@ with st.sidebar:
      st.page_link("https://www.run2fully.com/blog/risky_risky.html", label="**你不自覺的「激進」了嗎？**", icon="☝️")
      st.page_link("https://www.run2fully.com/blog/do_lump_sum.html", label="再聊「瘋狂的」單筆投入", icon="🔥")
      st.page_link("https://www.run2fully.com/blog/smart_beta.html", label="淺談台股最稀缺的「因子投資」", icon="☝️")
-     st.page_link("https://www.run2fully.com/blog/high_div_explain.html", label="追著幸福跑之「高股息四大門派」", icon="🔥")
 
 
 
